@@ -42,12 +42,26 @@ public:
 	//! Sets a new event receiver to receive events
 	void SetEventReceiver(IEventReceiver* receiver);
 
-	class CursorControl
+	//! Implementation of the win32 cursor control
+	class CursorControl : public virtual RefObject
 	{
 	public:
 
-		CursorControl(HWND hwnd) : m_bIsVisible(TRUE), m_HWnd(hwnd)
+		CursorControl(const dimension2d<s32>& wsize, HWND hwnd, BOOL fullscreen)
+			: m_WindowSize(wsize), m_InvWindowSize(0.0f, 0.0f), m_bIsVisible(TRUE),
+			m_HWnd(hwnd), m_iBorderX(0), m_iBorderY(0)
 		{
+			if (m_WindowSize.Width!=0)
+				m_InvWindowSize.Width = 1.0f / m_WindowSize.Width;
+
+			if (m_WindowSize.Height!=0)
+				m_InvWindowSize.Height = 1.0f / m_WindowSize.Height;
+
+			if (!fullscreen)
+			{
+				m_iBorderX = GetSystemMetrics(SM_CXDLGFRAME);
+				m_iBorderY = GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYDLGFRAME);
+			}
 		}
 
 		//! Changes the visible state of the mouse cursor.
@@ -62,9 +76,70 @@ public:
 			return m_bIsVisible;
 		}
 
+		//! Sets the new position of the cursor.
+		void SetPosition(const position2d<f32> &pos)
+		{
+			SetPosition(pos.X, pos.Y);
+		}
+
+		//! Sets the new position of the cursor.
+		void SetPosition(f32 x, f32 y)
+		{
+			SetPosition((s32)(x*m_WindowSize.Width), (s32)(y*m_WindowSize.Height));
+		}
+
+		//! Sets the new position of the cursor.
+		void SetPosition(const position2d<s32> &pos)
+		{
+			SetPosition(pos.X, pos.Y);
+		}
+
+		//! Sets the new position of the cursor.
+		void SetPosition(s32 x, s32 y)
+		{
+			RECT rect;
+			if (GetWindowRect(m_HWnd, &rect))
+				SetCursorPos(x + rect.left + m_iBorderX, y + rect.top + m_iBorderY);
+
+			m_CursorPos.X = x;
+			m_CursorPos.Y = y;
+		}
+
+		//! Returns the current position of the mouse cursor.
+		position2d<s32> GetPosition()
+		{
+			UpdateInternalCursorPosition();
+			return m_CursorPos;
+		}
+
+		//! Returns the current position of the mouse cursor.
+		position2d<f32> GetRelativePosition()
+		{
+			UpdateInternalCursorPosition();
+			return position2d<f32>(m_CursorPos.X * m_InvWindowSize.Width,
+				m_CursorPos.Y * m_InvWindowSize.Height);
+		}
+
 	private:
+
+		//! Updates the internal cursor position
+		void UpdateInternalCursorPosition()
+		{
+			POINT p;
+			GetCursorPos(&p);
+			RECT rect;
+			GetWindowRect(m_HWnd, &rect);
+			m_CursorPos.X = p.x-rect.left-m_iBorderX;
+			m_CursorPos.Y = p.y-rect.top-m_iBorderY;
+		}
+
+		position2d<s32> m_CursorPos;
+		dimension2d<s32> m_WindowSize;
+		dimension2d<f32> m_InvWindowSize;
 		BOOL m_bIsVisible;
 		HWND m_HWnd;
+
+		s32 m_iBorderX, m_iBorderY;
 	};
 
 

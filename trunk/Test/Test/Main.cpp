@@ -30,14 +30,14 @@ void main()
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-	DeviceWin32* pDevice = InvokePirate(640, 480);
+	DeviceWin32* pDevice = InvokePirate(1024, 768);
 	D3D9Driver* pDriver = pDevice->GetVideoDriver();
 
 	IDirect3DDevice9* pD3DDevice = pDriver->GetExposedVideoData().D3DDev9;
 
 	SceneManager* pSceneManager = pDevice->GetSceneManager();
-	pSceneManager->AddCameraSceneNode(0, vector3df(0.0f, 0.0f, 112.0f), vector3df(0.0f, 0.0f, -448.0f));
-	SMesh* pMesh = pSceneManager->GetMesh("..\\..\\Media\\firstmap.bsp");
+	pSceneManager->AddCameraSceneNodeFPS(pDevice->GetWin32CursorControl());
+	SMesh* pMesh = pSceneManager->GetMesh("../../Media/firstmap.bsp");
 
 	SetSimpleWhiteShaderConstant* setter = new SetSimpleWhiteShaderConstant(pSceneManager->GetActiveCamera());
 	s32 newM = pDriver->AddHighLevelShaderMaterialFromFiles("..\\..\\Media\\GenericLightmap.hlsl", "vertexMain", EVST_VS_3_0, 
@@ -58,6 +58,7 @@ void main()
 	pD3DDevice->SetSamplerState(0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
 	pD3DDevice->SetSamplerState(1, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
 	pD3DDevice->SetSamplerState(1, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
+
 
 	while(pDevice->Run())
 	{

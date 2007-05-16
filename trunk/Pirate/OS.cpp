@@ -49,4 +49,113 @@ void Printer::Log(const wchar_t* message, ELOG_LEVEL ll)
 		pLogger->Log(message, ll);
 }
 
+// ----------------------------------------------------------------
+// Windows specific functions
+// ----------------------------------------------------------------
+
+LARGE_INTEGER HighPerformanceFreq;
+BOOL HighPerformanceTimerSupport = FALSE;
+
+
+void Timer::InitTimer()
+{
+	HighPerformanceTimerSupport = QueryPerformanceFrequency(&HighPerformanceFreq);
+	InitVirtualTimer();
+}
+
+u32 Timer::GetRealTime()
+{
+	if (HighPerformanceTimerSupport)
+	{
+		LARGE_INTEGER nTime;
+		QueryPerformanceCounter(&nTime);
+		return u32((nTime.QuadPart) * 1000 / HighPerformanceFreq.QuadPart);
+	}
+	return GetTickCount();
+}
+
+// ------------------------------------------------------
+// virtual timer implementation
+
+f32 Timer::VirtualTimerSpeed = 1.0f;
+s32 Timer::VirtualTimerStopCounter = 0;
+u32 Timer::LastVirtualTime = 0;
+u32 Timer::StartRealTime = 0;
+u32 Timer::StaticTime = 0;
+
+//! returns current virtual time
+u32 Timer::GetTime()
+{
+	if (IsStopped())
+		return LastVirtualTime;
+
+	return LastVirtualTime + (u32)((StaticTime - StartRealTime) * VirtualTimerSpeed);
+}
+
+//! ticks, advances the virtual timer
+void Timer::Tick()
+{
+	StaticTime = GetRealTime();
+}
+
+//! sets the current virtual time
+void Timer::SetTime(u32 time)
+{
+	StaticTime = GetRealTime();
+	LastVirtualTime = time;
+	StartRealTime = StaticTime;
+}
+
+//! stops the virtual timer
+void Timer::StopTimer()
+{
+	if (!IsStopped())
+	{
+		// stop the virtual timer
+		LastVirtualTime = GetTime();
+	}
+
+	--VirtualTimerStopCounter;
+}
+
+//! starts the virtual timer
+void Timer::StartTimer()
+{
+	++VirtualTimerStopCounter;
+
+	if (!IsStopped())
+	{
+		// restart virtual timer
+		SetTime(LastVirtualTime);
+	}
+}
+
+//! sets the speed of the virtual timer
+void Timer::SetSpeed(f32 speed)
+{
+	SetTime(GetTime());
+
+	VirtualTimerSpeed = speed;
+	if (VirtualTimerSpeed < 0.0f)
+		VirtualTimerSpeed = 0.0f;
+}
+
+//! gets the speed of the virtual timer
+f32 Timer::GetSpeed()
+{
+	return VirtualTimerSpeed;
+}
+
+//! returns if the timer currently is stopped
+BOOL Timer::IsStopped()
+{
+	return VirtualTimerStopCounter != 0;
+}
+
+void Timer::InitVirtualTimer()
+{
+	StaticTime = GetRealTime();
+	StartRealTime = StaticTime;
+}
+
 }

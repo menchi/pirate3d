@@ -7,6 +7,7 @@
 #include "pirateArray.h"
 #include "BspLoader.h"
 #include "IEventReceiver.h"
+#include "CameraFPSSceneNode.h"
 
 namespace Pirate
 {
@@ -122,6 +123,14 @@ public:
 	virtual CameraSceneNode* AddCameraSceneNode(SceneNode* parent = 0,
 		const vector3df& position = vector3df(0,0,0), 
 		const vector3df& lookat = vector3df(0,0,0), s32 id=-1);
+
+	//! Adds a camera scene node which is able to be controled with the mouse and keys
+	//! like in most first person shooters (FPS):
+	virtual CameraSceneNode* AddCameraSceneNodeFPS( DeviceWin32::CursorControl* cursorControl, 
+		SceneNode* parent = 0,
+		f32 rotateSpeed = 1500.0f, f32 moveSpeed = 200.0f, s32 id=-1,
+		SKeyMap* keyMapArray=0, s32 keyMapSize=0, BOOL noVerticalMovement=FALSE,
+		f32 jumpSpeed = 0.f);
 
 	//! Returns the root scene node. This is the scene node wich is parent 
 	//! of all scene nodes. The root scene node is a special scene node which
