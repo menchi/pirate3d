@@ -151,6 +151,24 @@ CameraSceneNode* SceneManager::AddCameraSceneNode(SceneNode* parent, const vecto
 	return node;
 }
 
+//! Adds a camera scene node which is able to be controled with the mouse and keys
+//! like in most first person shooters (FPS):
+CameraSceneNode* SceneManager::AddCameraSceneNodeFPS(DeviceWin32::CursorControl* cursorControl, SceneNode* parent, 
+													 f32 rotateSpeed, f32 moveSpeed, s32 id,
+													 SKeyMap* keyMapArray, s32 keyMapSize, BOOL noVerticalMovement,f32 jumpSpeed)
+{
+	if (!parent)
+		parent = this;
+
+	CameraSceneNode* node = new CameraFPSSceneNode(parent, this, cursorControl,
+		id, rotateSpeed, moveSpeed, jumpSpeed, keyMapArray, keyMapSize, noVerticalMovement);
+	node->Drop();
+
+	SetActiveCamera(node);
+
+	return node;
+}
+
 //! Returns the root scene node. This is the scene node wich is parent
 //! of all scene nodes. The root scene node is a special scene node which
 //! only exists to manage all scene nodes. It is not rendered and cannot
@@ -367,7 +385,7 @@ void SceneManager::DrawAll()
 	D3D9Driver* driver = GetVideoDriver();
 
 	// do animations and other stuff.
-//	OnAnimate(Timer::GetTime());
+	OnAnimate(Timer::GetTime());
 
 	/*!
 	First Scene Node for prerendering should be the active camera

@@ -29,6 +29,51 @@ public:
 	static Logger* pLogger;
 };
 
+class Timer
+{
+public:
+
+	//! returns the current time in milliseconds
+	static u32 GetTime();
+
+	//! initializes the real timer
+	static void InitTimer();
+
+	//! sets the current virtual (game) time
+	static void SetTime(u32 time);
+
+	//! stops the virtual (game) timer
+	static void StopTimer();
+
+	//! starts the game timer
+	static void StartTimer();
+
+	//! sets the speed of the virtual timer
+	static void SetSpeed(f32 speed);
+
+	//! gets the speed of the virtual timer
+	static f32 GetSpeed();
+
+	//! returns if the timer currently is stopped
+	static BOOL IsStopped();
+
+	//! makes the virtual timer update the time value based on the real time
+	static void Tick();
+
+	//! returns the current real time in milliseconds
+	static u32 GetRealTime();
+
+private:
+
+	static void InitVirtualTimer();
+
+	static f32 VirtualTimerSpeed;
+	static s32 VirtualTimerStopCounter;
+	static u32 StartRealTime;
+	static u32 LastVirtualTime;
+	static u32 StaticTime;
+};
+
 }
 
 #endif

@@ -355,6 +355,14 @@
 			Name="scene"
 			>
 			<File
+				RelativePath=".\CameraFPSSceneNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\CameraFPSSceneNode.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CameraSceneNode.cpp"
 				>
 			</File>

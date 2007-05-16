@@ -270,6 +270,8 @@ DeviceWin32::DeviceWin32(s32 Width, s32 Height, BOOL fullscreen, BOOL stencilbuf
 	SetDebugName("DeviceWin32");
 #endif
 
+	Timer::InitTimer();
+
 	Printer::pLogger = m_pLogger;
 	stringc s = "Pirate Engine version ";
 	s.append(GetVersion());
@@ -360,7 +362,7 @@ DeviceWin32::DeviceWin32(s32 Width, s32 Height, BOOL fullscreen, BOOL stencilbuf
 	}
 
 	// create cursor control
-	m_pWin32CursorControl = new CursorControl(m_HWnd);
+	m_pWin32CursorControl = new CursorControl(dimension2di(Width, Height), m_HWnd, fullscreen);
 
 	// create driver
 	CreateDriver(Width, Height, 32, fullscreen, stencilbuffer, vsync, FALSE);
@@ -377,6 +379,7 @@ DeviceWin32::DeviceWin32(s32 Width, s32 Height, BOOL fullscreen, BOOL stencilbuf
 	// set this as active window
 	SetActiveWindow(m_HWnd);
 	SetForegroundWindow(m_HWnd);
+
 }
 
 DeviceWin32::~DeviceWin32()
@@ -394,7 +397,8 @@ DeviceWin32::~DeviceWin32()
 	if (m_bChangedToFullScreen)
 		ChangeDisplaySettings(NULL,0);
 
-	delete m_pWin32CursorControl;
+	if (m_pWin32CursorControl)
+		m_pWin32CursorControl->Drop();
 
 	if (m_pSceneManager)
 		m_pSceneManager->Drop();
@@ -420,6 +424,8 @@ BOOL DeviceWin32::Run()
 {
 	MSG msg;
 	BOOL quit = FALSE;
+
+	Timer::Tick();
 
 	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 	{
@@ -572,9 +578,9 @@ void DeviceWin32::PostEventFromUser(SEvent event)
 /*
 	if (!absorbed && GUIEnvironment)
 		absorbed = GUIEnvironment->postEventFromUser(event);
-
-	if (!absorbed && SceneManager)
-		absorbed = SceneManager->postEventFromUser(event);*/
+*/
+	if (!absorbed && m_pSceneManager)
+		absorbed = m_pSceneManager->PostEventFromUser(event);
 }
 
 //! Notifies the device, that it has been resized
