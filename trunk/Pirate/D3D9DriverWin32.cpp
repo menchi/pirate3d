@@ -891,6 +891,12 @@ void D3D9Driver::AddTexture(D3D9Texture* texture)
 //! Can be called by an IMaterialRenderer to make its work easier.
 void D3D9Driver::SetBasicRenderStates(const SMaterial& material, const SMaterial& lastMaterial, BOOL resetAllRenderstates)
 {
+	for (u32 i=0; i<MATERIAL_MAX_TEXTURES; i++)
+	{
+		m_pID3DDevice->SetSamplerState(i, D3DSAMP_ADDRESSU, material.TextureWrap[i]);
+		m_pID3DDevice->SetSamplerState(i, D3DSAMP_ADDRESSV, material.TextureWrap[i]);
+	}
+
 	return;
 }
 

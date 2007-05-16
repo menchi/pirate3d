@@ -2,6 +2,7 @@
 #define _PIRATE_H_
 
 #include "D3D9HLSLShader.h"
+#include "IShaderConstantSetCallback.h"
 #include "DeviceWin32.h"
 #include "pirateMath.h"
 #include "pirateArray.h"
@@ -9,6 +10,9 @@
 #include "ImageLoader.h"
 #include "Image.h"
 #include "SMeshBuffer.h"
+#include "CameraSceneNode.h"
+#include "MeshSceneNode.h"
+#include "SceneManager.h"
 
 namespace Pirate
 {

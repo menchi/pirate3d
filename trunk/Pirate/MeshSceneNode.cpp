@@ -1,4 +1,6 @@
 #include "MeshSceneNode.h"
+#include "D3D9DriverWin32.h"
+#include "SceneManager.h"
 
 namespace Pirate
 {
@@ -38,7 +40,7 @@ void MeshSceneNode::OnRegisterSceneNode()
 		// materials, check of what type they are and register this node for the right
 		// render pass according to that.
 
-//		D3D9Driver* driver = SceneManager->GetVideoDriver();
+		D3D9Driver* driver = m_pSceneManager->GetVideoDriver();
 
 		m_iPassCount = 0;
 		int transparentCount = 0;
@@ -52,13 +54,13 @@ void MeshSceneNode::OnRegisterSceneNode()
 			for (u32 i=0; i<m_pMesh->GetMeshBufferCount(); ++i)
 			{
 				SD3D9MeshBuffer* mb = m_pMesh->GetMeshBuffer(i);
-/*				D3D9HLSLShader* rnd = mb ? driver->GetMaterialRenderer(mb->GetMaterial().ShaderType) : 0;
+				D3D9HLSLShader* rnd = mb ? driver->GetMaterialRenderer(mb->GetMaterial().ShaderType) : 0;
 
 				if (rnd && rnd->IsTransparent()) 
 					++transparentCount;
 				else 
 					++solidCount;
-*/
+
 				if (solidCount && transparentCount)
 					break;
 			}
@@ -69,26 +71,26 @@ void MeshSceneNode::OnRegisterSceneNode()
 
 			for (u32 i=0; i<m_Materials.size(); ++i)
 			{
-/*				D3D9HLSLShader* rnd = driver->GetMaterialRenderer(m_Materials[i].ShaderType);
+				D3D9HLSLShader* rnd = driver->GetMaterialRenderer(m_Materials[i].ShaderType);
 
 				if (rnd && rnd->IsTransparent()) 
 					++transparentCount;
 				else 
 					++solidCount;
-*/
+
 				if (solidCount && transparentCount)
 					break;
 			}	
 		}
 
 		// register according to material types counted
-/*
+
 		if (solidCount)
-			SceneManager->RegisterNodeForRendering(this, ESNRP_SOLID);
+			m_pSceneManager->RegisterNodeForRendering(this, ESNRP_SOLID);
 
 		if (transparentCount)
-			SceneManager->RegisterNodeForRendering(this, ESNRP_TRANSPARENT);
-*/
+			m_pSceneManager->RegisterNodeForRendering(this, ESNRP_TRANSPARENT);
+
 		SceneNode::OnRegisterSceneNode();
 	}
 }
@@ -98,13 +100,13 @@ void MeshSceneNode::OnRegisterSceneNode()
 //! renders the node.
 void MeshSceneNode::Render()
 {
-/*	D3D9Driver* driver = SceneManager->GetVideoDriver();
+	D3D9Driver* driver = m_pSceneManager->GetVideoDriver();
 
 	if (!m_pMesh || !driver)
 		return;
 
-	BOOL isTransparentPass = SceneManager->GetSceneNodeRenderPass() == ESNRP_TRANSPARENT;
-*/
+	BOOL isTransparentPass = m_pSceneManager->GetSceneNodeRenderPass() == ESNRP_TRANSPARENT;
+
 	++m_iPassCount;
 
 	m_Box = m_pMesh->GetBoundingBox();
@@ -148,7 +150,7 @@ void MeshSceneNode::Render()
 		if (mb)
 		{
 			const SMaterial& material = m_bReadOnlyMaterials ? mb->GetMaterial() : m_Materials[i];
-/*
+
 			D3D9HLSLShader* rnd = driver->GetMaterialRenderer(material.ShaderType);
 			BOOL transparent = (rnd && rnd->IsTransparent());
 
@@ -159,7 +161,7 @@ void MeshSceneNode::Render()
 				driver->SetMaterial(material);
 				driver->DrawMeshBuffer(mb);
 			}
-*/		}
+		}
 	}			
 }
 

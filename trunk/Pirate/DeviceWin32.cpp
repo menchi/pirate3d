@@ -1,6 +1,7 @@
 #include "DeviceWin32.h"
 #include "OS.h"
 #include "pirateList.h"
+#include "SceneManager.h"
 
 namespace Pirate
 {
@@ -262,7 +263,8 @@ namespace Pirate
 
 DeviceWin32::DeviceWin32(s32 Width, s32 Height, BOOL fullscreen, BOOL stencilbuffer, BOOL vsync, IEventReceiver* recv)
 : m_HWnd(0), m_bChangedToFullScreen(FALSE), m_bFullScreen(fullscreen), m_bResized(FALSE), m_pUserReceiver(recv),
-  m_bExternalWindow(FALSE), m_pVideoDriver(NULL), m_pLogger(new Logger(m_pUserReceiver)), m_pFileSystem(new FileSystem)
+  m_bExternalWindow(FALSE), m_pVideoDriver(NULL), m_pLogger(new Logger(m_pUserReceiver)), m_pFileSystem(new FileSystem),
+  m_pSceneManager(0)
 {
 #ifdef _DEBUG
 	SetDebugName("DeviceWin32");
@@ -362,10 +364,10 @@ DeviceWin32::DeviceWin32(s32 Width, s32 Height, BOOL fullscreen, BOOL stencilbuf
 
 	// create driver
 	CreateDriver(Width, Height, 32, fullscreen, stencilbuffer, vsync, FALSE);
-/*
-	if (VideoDriver)
-		createGUIAndScene();
-*/
+
+	if (m_pVideoDriver)
+		CreateGUIAndScene();
+
 	// register environment
 	SEnvMapper em;
 	em.PirateDev = this;
@@ -388,13 +390,23 @@ DeviceWin32::~DeviceWin32()
 			break;
 		}
 	}
+
 	if (m_bChangedToFullScreen)
 		ChangeDisplaySettings(NULL,0);
+
 	delete m_pWin32CursorControl;
 
-	m_pVideoDriver->Drop();
-	m_pOSOperator->Drop();
+	if (m_pSceneManager)
+		m_pSceneManager->Drop();
+
+	if (m_pVideoDriver)
+		m_pVideoDriver->Drop();
+
+	if (m_pOSOperator)
+		m_pOSOperator->Drop();
+
 	m_pFileSystem->Drop();
+
 	m_pLogger->Drop();
 }
 
@@ -577,6 +589,22 @@ FileSystem* DeviceWin32::GetFileSystem()
 	return m_pFileSystem;
 }
 
+//! returns the scene manager
+SceneManager* DeviceWin32::GetSceneManager()
+{
+	return m_pSceneManager;
+}
+
+//! Sets a new event receiver to receive events
+void DeviceWin32::SetEventReceiver(IEventReceiver* receiver)
+{
+	m_pUserReceiver = receiver;
+	m_pLogger->SetReceiver(receiver);
+//	if (GUIEnvironment)
+//		GUIEnvironment->setUserEventReceiver(receiver);
+}
+
+//! create the driver
 void DeviceWin32::CreateDriver(s32 width, s32 height, u32 bits, BOOL fullscreen, BOOL stencilbuffer, BOOL vsync, BOOL antiAlias)
 {
 	m_pVideoDriver = CreateDirectX9Driver(width, height, m_HWnd, bits, fullscreen, stencilbuffer, vsync, antiAlias, m_pFileSystem);
@@ -585,6 +613,18 @@ void DeviceWin32::CreateDriver(s32 width, s32 height, u32 bits, BOOL fullscreen,
 		Printer::Log("Could not create DIRECT3D9 Driver.", ELL_ERROR);
 	}
 }
+
+void DeviceWin32::CreateGUIAndScene()
+{
+	// create gui environment
+//	GUIEnvironment = gui::createGUIEnvironment(FileSystem, VideoDriver, Operator);
+
+	// create Scene manager
+	m_pSceneManager = CreateSceneManager(m_pVideoDriver, m_pFileSystem, m_pWin32CursorControl);
+
+	SetEventReceiver(m_pUserReceiver);
+}
+
 
 DeviceWin32::CursorControl* DeviceWin32::GetWin32CursorControl()
 {

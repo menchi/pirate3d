@@ -263,7 +263,7 @@ public:
 
 
 	//! Comparison operator
-	BOOL operator ==(const T* const str) const
+	bool operator ==(const T* const str) const
 	{
 		if (!str)
 			return FALSE;
@@ -279,7 +279,7 @@ public:
 
 
 	//! Comparison operator
-	BOOL operator ==(const string<T>& other) const
+	bool operator ==(const string<T>& other) const
 	{
 		for(u32 i=0; array[i] && other.array[i]; ++i)
 			if (array[i] != other.array[i])
@@ -290,7 +290,7 @@ public:
 
 
 	//! Is smaller operator
-	BOOL operator <(const string<T>& other) const
+	bool operator <(const string<T>& other) const
 	{
 		for(u32 i=0; array[i] && other.array[i]; ++i)
 		{
@@ -309,7 +309,7 @@ public:
 
 
 	//! Equals not operator
-	BOOL operator !=(const T* const str) const
+	bool operator !=(const T* const str) const
 	{
 		return !(*this == str);
 	}
@@ -317,7 +317,7 @@ public:
 
 
 	//! Equals not operator
-	BOOL operator !=(const string<T>& other) const
+	bool operator !=(const string<T>& other) const
 	{
 		return !(*this == other);
 	}
@@ -382,7 +382,7 @@ public:
 	//! Compares the string ignoring case.
 	/** \param other: Other string to compare.
 	\return Returns true if the string is smaller ignoring case. */
-	BOOL lower_ignore_case(const string<T>& other) const
+	bool lower_ignore_case(const string<T>& other) const
 	{
 		for(u32 i=0; array[i] && other.array[i]; ++i)
 		{
@@ -397,7 +397,7 @@ public:
 
 
 	//! compares the first n characters of the strings
-	BOOL equalsn(const string<T>& other, int len) const
+	bool equalsn(const string<T>& other, int len) const
 	{
 		u32 i;
 		for(i=0; array[i] && other[i] && i < len; ++i)
@@ -411,7 +411,7 @@ public:
 
 
 	//! compares the first n characters of the strings
-	BOOL equalsn(const T* const str, int len) const
+	bool equalsn(const T* const str, int len) const
 	{
 		if (!str)
 			return false;

@@ -137,6 +137,9 @@ public:
 	//! creates a Texture
 	D3D9Texture* AddTexture(const dimension2d<s32>& size, const c8* name, ECOLOR_FORMAT format = ECF_A8R8G8B8);
 
+	//! looks if the image is already loaded
+	D3D9Texture* FindTexture(const c8* filename);
+
 	//! Removes a texture from the texture cache and deletes it, freeing lot of
 	//! memory. 
 	void RemoveTexture(D3D9Texture* texture);
@@ -150,6 +153,9 @@ public:
 
 	//! sets a render target
 	BOOL SetRenderTarget(D3D9Texture* texture, BOOL clearBackBuffer, BOOL clearZBuffer, SColor color);
+
+	// returns the current size of the screen or rendertarget
+	dimension2d<s32> GetCurrentRenderTargetSize();
 
 	//! Enables or disables a texture creation flag.
 	void SetTextureCreationFlag(E_TEXTURE_CREATION_FLAG flag, BOOL enabled);
@@ -241,12 +247,6 @@ private:
 	//! returns a device dependent texture from a software surface (IImage)
 	//! THIS METHOD HAS TO BE OVERRIDDEN BY DERIVED DRIVERS WITH OWN TEXTURES
 	D3D9Texture* CreateDeviceDependentTexture(Image* surface, const char* name);
-
-	// returns the current size of the screen or rendertarget
-	dimension2d<s32> GetCurrentRenderTargetSize();
-
-	//! looks if the image is already loaded
-	D3D9Texture* FindTexture(const c8* filename);
 
 	//! opens the file and loads it into the surface
 	D3D9Texture* LoadTextureFromFile(FileReader* file, const c8* hashName = 0);
