@@ -1,6 +1,7 @@
 #include "D3D9DriverWin32.h"
 #include "CameraSceneNode.h"
 #include "OS.h"
+#include "SceneManager.h"
 
 namespace Pirate
 {
@@ -23,16 +24,16 @@ CameraSceneNode::CameraSceneNode(SceneNode* parent, SceneManager* mgr, s32 id,
 
 	// set default projection
 
-	m_fFovy = Pirate::PI / 2.5f;	// Field of view, in radians. 
-	m_fAspect = 4.0f / 3.0f;	// Aspect ratio. 
+	m_fFovy = Pirate::PI / 2.0f;	// Field of view, in radians. 
+	m_fAspect = 1.0f / 1.0f;	// Aspect ratio. 
 	m_fZNear = 1.0f;		// value of the near view-plane. 
-	m_fZFar = 3000.0f;		// Z-value of the far view-plane. 
-/*
+	m_fZFar = 10000.0f;		// Z-value of the far view-plane. 
+
 	D3D9Driver* d = mgr->GetVideoDriver();
 	if (d)
 		m_fAspect = (f32)d->GetCurrentRenderTargetSize().Width /
 		(f32)d->GetCurrentRenderTargetSize().Height;
-*/
+
 	RecalculateProjectionMatrix();
 	RecalculateViewArea();
 }
@@ -206,10 +207,10 @@ void CameraSceneNode::OnRegisterSceneNode()
 
 	m_ViewArea.Matrices [ SViewFrustum::ETS_VIEW ].buildCameraLookAtMatrixLH(pos, m_Target, up);
 	RecalculateViewArea();
-/*
+
 	if ( m_pSceneManager->GetActiveCamera () == this )
 		m_pSceneManager->RegisterNodeForRendering(this, ESNRP_CAMERA);
-*/
+
 	if (m_bIsVisible)
 		SceneNode::OnRegisterSceneNode();
 }

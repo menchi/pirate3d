@@ -89,6 +89,8 @@ public:
 	//! sets a variable in the shader. 
 	virtual BOOL SetVariable(BOOL vertexShader, const c8* name, const f32* floats, int count);
 
+	virtual BOOL IsTransparent() { return FALSE; };
+
 protected:
 
 	HRESULT StubD3DXCompileShader(LPCSTR pSrcData, UINT SrcDataLen, CONST D3DXMACRO* pDefines,

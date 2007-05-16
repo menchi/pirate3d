@@ -11,6 +11,7 @@ D3DVERTEXELEMENT9 BspVertexDecl[] =
 {
 	{0,  0,  D3DDECLTYPE_FLOAT3,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
 	{0, 12,  D3DDECLTYPE_FLOAT2,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 0},
+	{0, 20,  D3DDECLTYPE_FLOAT2,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_TEXCOORD, 1},
 	D3DDECL_END()
 };
 
@@ -19,10 +20,11 @@ struct BSP_VT
 	float pos[3];
 	float uv[2];
 	float lightuv[2];
-	BSP_VT(float x, float y, float z, float u, float v)
+	BSP_VT(float x, float y, float z, float u, float v, float lu, float lv)
 	{
 		pos[0] = x; pos[1] = y; pos[2] = z;
 		uv[0] = u; uv[1] = v;
+		lightuv[0] = lu; lightuv[1] = lv;
 	}
 };
 
@@ -70,6 +72,8 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	texinfo_t* pTexinfos;
 	dtexdata_t* pTexData;
 	ColorRGBExp32* pLightmaps;
+	c8* pTexStringData;
+	s32* pTexStringTable;
 
 	file->Read(&header, sizeof(dheader_t));
 	char* pIdentString = (char*)&header.ident;
@@ -108,6 +112,14 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	file->Seek((header.lumps[LUMP_LIGHTING]).fileofs);
 	pLightmaps = (ColorRGBExp32*)malloc(header.lumps[LUMP_LIGHTING].filelen);
 	file->Read(pLightmaps, header.lumps[LUMP_LIGHTING].filelen);
+
+	file->Seek((header.lumps[LUMP_TEXDATA_STRING_DATA]).fileofs);
+	pTexStringData = (c8*)malloc(header.lumps[LUMP_TEXDATA_STRING_DATA].filelen);
+	file->Read(pTexStringData, header.lumps[LUMP_TEXDATA_STRING_DATA].filelen);
+
+	file->Seek((header.lumps[LUMP_TEXDATA_STRING_TABLE]).fileofs);
+	pTexStringTable = (s32*)malloc(header.lumps[LUMP_TEXDATA_STRING_TABLE].filelen);
+	file->Read(pTexStringTable, header.lumps[LUMP_TEXDATA_STRING_TABLE].filelen);
 
 	s32 vertexCount = header.lumps[LUMP_VERTEXES].filelen / sizeof(dvertex_t);
 	s32 faceCount = header.lumps[LUMP_FACES].filelen / sizeof(dface_t);
@@ -163,14 +175,9 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 			tc2 /= texH;
 			tc3 /= lightmapW;
 			tc4 /= lightmapH;
-/*			tc3 = (tc3 > 0.95f)? 1.2f: tc3;
-			tc3 = (tc3 < -0.95f)? -1.2f: tc3;
-			tc3 = (tc3 > -0.05 && tc3 < 0.05)? 0.0f: tc3;
-			tc4 = (tc4 > 0.95f)? 1.2f: tc4;
-			tc4 = (tc4 < -0.95f)? -1.2f: tc4;
-			tc4 = (tc4 > -0.2 && tc4 < 0.2)? 0.0f: tc4;
-*/
-			tmpVertices.push_back(BSP_VT(pVertices[v1].point._v[0], pVertices[v1].point._v[1], pVertices[v1].point._v[2], tc3, tc4));
+
+			tmpVertices.push_back(BSP_VT(pVertices[v1].point._v[0], pVertices[v1].point._v[1], pVertices[v1].point._v[2],
+										 tc1, tc2, tc3, tc4));
 
 			if (i == surfedgeStart)
 			{
@@ -187,8 +194,6 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 
 		tmpIndices.push_back(faceIndices);
 	}
-
-	m_pDriver->SetTextureCreationFlag(ETCF_CREATE_MIP_MAPS, FALSE);
 
 	SMesh* pMesh = new SMesh();
 	for (int j=0; j<faceCount; j++)
@@ -214,9 +219,18 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 		memcpy(pIndices, tmpIndices[j].const_pointer(), indexBufferSize);
 		pMB->GetIndexBuffer()->Unlock();
 
+		stringc textureName = pTexStringData + pTexStringTable[pTexData[pTexinfos[pFaces[j].texinfo].texdata].nameStringTableID];
+		s32 lastSlash = textureName.findLast('/');
+		textureName = textureName.c_str() + lastSlash + 1;
+		stringc workingDir = "../../Media/";
+		textureName = workingDir + textureName + ".tga";
+		D3D9Texture* pTexture = m_pDriver->GetTexture(textureName.c_str());
+		pMB->m_Material.Textures[0] = pTexture;
+
 		stringc lightmapName = pFaces[j].lightofs;
 		s32 lightmapW = pFaces[j].m_LightmapTextureSizeInLuxels[0]+1;
 		s32 lightmapH = pFaces[j].m_LightmapTextureSizeInLuxels[1]+1;
+		m_pDriver->SetTextureCreationFlag(ETCF_CREATE_MIP_MAPS, FALSE);
 		D3D9Texture* pD3DLightmap = m_pDriver->AddTexture(dimension2di(lightmapW, lightmapH), lightmapName.c_str(), ECF_A8R8G8B8);
 		s32 luxelCount = lightmapW * lightmapH;
 		ColorRGBExp32* pLightmap = (ColorRGBExp32*)(((byte*)pLightmaps) + pFaces[j].lightofs);
@@ -229,13 +243,13 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 			pLuxels[i*4+3] = 255;
 		}
 		pD3DLightmap->Unlock();
-		pMB->m_Material.Textures[0] = pD3DLightmap;
+		m_pDriver->SetTextureCreationFlag(ETCF_CREATE_MIP_MAPS, TRUE);
+		pMB->m_Material.Textures[1] = pD3DLightmap;
+		pMB->m_Material.TextureWrap[1] = D3DTADDRESS_CLAMP;
 
 		pMesh->AddMeshBuffer(pMB);
 		pMB->Drop();
 	}
-
-	m_pDriver->SetTextureCreationFlag(ETCF_CREATE_MIP_MAPS, TRUE);
 
 	free(pVertices);
 	free(pEdges);
@@ -244,6 +258,8 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	free(pTexinfos);
 	free(pTexData);
 	free(pLightmaps);
+	free(pTexStringData);
+	free(pTexStringTable);
 
 	return pMesh;
 }

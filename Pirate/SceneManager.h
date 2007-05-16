@@ -268,12 +268,12 @@ private:
 
 	//! render pass lists
 	array<SceneNode*> m_CameraList;
-	array<DistanceNodeEntry> LightList;
-	array<SceneNode*> ShadowNodeList;
-	array<SceneNode*> SkyBoxList;
-	array<DefaultNodeEntry> SolidNodeList;
-	array<TransparentNodeEntry> TransparentNodeList;
-	array<ShaderNodeEntry> ShaderNodeList[ ESNRP_SHADER_10 - ESNRP_SHADER_0 + 1];
+	array<DistanceNodeEntry> m_LightList;
+	array<SceneNode*> m_ShadowNodeList;
+	array<SceneNode*> m_SkyBoxList;
+	array<DefaultNodeEntry> m_SolidNodeList;
+	array<TransparentNodeEntry> m_TransparentNodeList;
+	array<ShaderNodeEntry> m_ShaderNodeList[ ESNRP_SHADER_10 - ESNRP_SHADER_0 + 1];
 
 	//! current active camera
 	CameraSceneNode* m_pActiveCamera;
