@@ -1,11 +1,6 @@
-#include "CompileConfig.h"
-
-#define _PIRATE_DONT_DO_MEMORY_DEBUGGING_HERE
-#include "D3D9DriverWin32.h"
 #include "D3D9Texture.h"
+#include "D3D9Driver.h"
 #include "OS.h"
-
-#include <d3dx9tex.h>
 
 namespace Pirate
 {

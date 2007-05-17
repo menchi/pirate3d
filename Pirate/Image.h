@@ -38,9 +38,6 @@ class Image : public virtual RefObject
 public:
 
 	//! constructor 
-	Image(ECOLOR_FORMAT format, Image* imageToCopy);
-
-	//! constructor 
 	//! \param useForeignMemory: If true, the image will use the data pointer
 	//! directly and own it from now on, which means it will also try to delete [] the
 	//! data when the image will be destructed. If false, the memory will by copied.
@@ -48,9 +45,6 @@ public:
 
 	//! constructor
 	Image(ECOLOR_FORMAT format, const dimension2d<s32>& size);
-
-	//! constructor
-	Image(Image* imageToCopy, const position2d<s32>& pos, const dimension2d<s32>& size);
 
 	//! destructor
 	~Image();
@@ -100,30 +94,6 @@ public:
 	//! returns the color format
 	ECOLOR_FORMAT GetColorFormat() const;
 
-	//! draws a rectangle
-	void DrawRectangle(const rect<s32>& rect, const SColor &color);
-
-	//! copies this surface into another
-	void CopyTo(Image* target, const position2d<s32>& pos);
-
-	//! copies this surface into another
-	void CopyTo(Image* target, const position2d<s32>& pos, const rect<s32>& sourceRect, const rect<s32>* clipRect=0);
-
-	//! copies this surface into another, using the alpha mask, an cliprect and a color to add with
-	void CopyToWithAlpha(Image* target, const position2d<s32>& pos, const rect<s32>& sourceRect, const SColor &color, const rect<s32>* clipRect = 0);
-
-	//! copies this surface into another, scaling it to fit it.
-	void CopyToScaling(Image* target);
-
-	//! copies this surface into another, scaling it to fit it, appyling a box filter
-	void CopyToScalingBoxFilter(Image* target, s32 bias = 0);
-
-	//! draws a line from to
-	void DrawLine(const position2d<s32>& from, const position2d<s32>& to, const SColor &color);
-
-	//! fills the surface with black or white
-	void Fill(const SColor &color);
-
 	//! returns pitch of image
 	u32 GetPitch() const
 	{
@@ -137,8 +107,6 @@ private:
 	void InitData();
 
 	s32 GetBitsPerPixelFromFormat();
-
-	inline SColor GetPixelBox ( s32 x, s32 y, s32 fx, s32 fy, s32 bias );
 
 	void* m_pData;
 	dimension2d<s32> m_Size;

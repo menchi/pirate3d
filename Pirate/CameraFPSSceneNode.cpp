@@ -1,5 +1,4 @@
 #include "CameraFPSSceneNode.h"
-#include "D3D9DriverWin32.h"
 #include "SceneManager.h"
 #include "os.h"
 
@@ -36,7 +35,7 @@ CameraFPSSceneNode::CameraFPSSceneNode(SceneNode* parent, SceneManager* mgr,
 		m_KeyMap.push_back(SCamKeyMap(0, Pirate::KEY_KEY_W));
 		m_KeyMap.push_back(SCamKeyMap(1, Pirate::KEY_KEY_S));
 		m_KeyMap.push_back(SCamKeyMap(2, Pirate::KEY_KEY_A));
-		m_KeyMap.push_back(SCamKeyMap(3, Pirate::KEY_KEY_F));
+		m_KeyMap.push_back(SCamKeyMap(3, Pirate::KEY_KEY_D));
 		m_KeyMap.push_back(SCamKeyMap(4, Pirate::KEY_SPACE));
 	}
 	else

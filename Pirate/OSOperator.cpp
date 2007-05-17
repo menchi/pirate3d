@@ -1,12 +1,4 @@
 #include "OSOperator.h"
-#include "CompileConfig.h"
-
-#ifdef _PIRATE_WINDOWS_
-#include <windows.h>
-#endif
-#ifdef _PIRATE_XBOX_
-#include <xtl.h>
-#endif
 
 namespace Pirate
 {

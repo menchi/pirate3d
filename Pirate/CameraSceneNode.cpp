@@ -1,7 +1,6 @@
-#include "D3D9DriverWin32.h"
 #include "CameraSceneNode.h"
-#include "OS.h"
 #include "SceneManager.h"
+#include "D3D9Driver.h"
 
 namespace Pirate
 {

@@ -1,12 +1,5 @@
 #include "OS.h"
 
-#ifdef _PIRATE_WINDOWS_
-#include <Windows.h>
-#endif
-#ifdef _PIRATE_XBOX_
-#include <xtl.h>
-#endif
-
 namespace Pirate
 {
 #define bswap_16(X) _byteswap_ushort(X)

@@ -1,6 +1,8 @@
 #ifndef _PIRATE_TYPES_H_
 #define _PIRATE_TYPES_H_
 
+#include "CompileConfig.h"
+
 namespace Pirate
 {
 	typedef unsigned char	u8; 

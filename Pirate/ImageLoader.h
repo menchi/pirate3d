@@ -1,8 +1,7 @@
 #ifndef _PIRATE_IMAGE_LOADER_H_
 #define _PIRATE_IMAGE_LOADER_H_
 
-#include "FileReader.h"
-#include "Image.h"
+#include "RefObject.h"
 
 namespace Pirate
 {
@@ -37,6 +36,9 @@ struct PsdHeader
 #endif
 
 #undef PACK_STRUCT
+
+class Image;
+class FileReader;
 
 /*!
 Surface Loader for psd images

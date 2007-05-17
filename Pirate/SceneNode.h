@@ -3,10 +3,10 @@
 
 #include "RefObject.h"
 #include "SMaterial.h"
-#include "pirateString.h"
 #include "aabbox3d.h"
 #include "matrix4.h"
 #include "pirateList.h"
+#include "pirateString.h"
 
 namespace Pirate
 {
@@ -32,6 +32,8 @@ enum E_DEBUG_SCENE_TYPE
 };
 
 class SceneManager;
+class D3D9Texture;
+
 
 //! Scene node interface.
 /** A scene node is a node in the hirachical scene graph. Every scene node may have children,

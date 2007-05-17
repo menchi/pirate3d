@@ -1,6 +1,8 @@
 #include "MeshSceneNode.h"
-#include "D3D9DriverWin32.h"
+#include "D3D9Driver.h"
 #include "SceneManager.h"
+#include "D3D9HLSLShader.h"
+#include "SMesh.h"
 
 namespace Pirate
 {

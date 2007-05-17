@@ -1,14 +1,12 @@
 #include "SceneManager.h"
-#include "D3D9DriverWin32.h"
-#include "FileSystem.h"
-
-
-#include "os.h"
-
-#include "CameraSceneNode.h"
 #include "MeshSceneNode.h"
-#include "DeviceWin32.h"
+#include "EmptySceneNode.h"
+#include "D3D9Driver.h"
+#include "FileSystem.h"
 #include "MeshCache.h"
+#include "SMesh.h"
+#include "BspLoader.h"
+#include "os.h"
 
 namespace Pirate
 {
@@ -165,6 +163,18 @@ CameraSceneNode* SceneManager::AddCameraSceneNodeFPS(DeviceWin32::CursorControl*
 	node->Drop();
 
 	SetActiveCamera(node);
+
+	return node;
+}
+
+//! Adds an empty scene node.
+SceneNode* SceneManager::AddEmptySceneNode(SceneNode* parent, s32 id)
+{
+	if (!parent)
+		parent = this;
+
+	SceneNode* node = new EmptySceneNode(parent, this, id);
+	node->Drop();
 
 	return node;
 }

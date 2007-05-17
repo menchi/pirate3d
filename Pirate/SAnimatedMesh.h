@@ -1,8 +1,7 @@
-#ifndef __S_ANIMATED_MESH_H_INCLUDED__
-#define __S_ANIMATED_MESH_H_INCLUDED__
+#ifndef _S_ANIMATED_MESH_H_INCLUDED_
+#define _S_ANIMATED_MESH_H_INCLUDED_
 
 #include "SMesh.h"
-#include "pirateArray.h"
 
 namespace Pirate
 {

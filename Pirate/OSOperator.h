@@ -1,8 +1,8 @@
 #ifndef _OS_OPERATOR_H_INCLUDED_
 #define _OS_OPERATOR_H_INCLUDED_
 
-#include "pirateString.h"
 #include "RefObject.h"
+#include "pirateString.h"
 
 namespace Pirate
 {

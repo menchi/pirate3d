@@ -1,10 +1,9 @@
+#include "D3D9Driver.h"
 #include "D3D9HLSLShader.h"
 #include "SMeshBuffer.h"
-#include "D3D9DriverWin32.h"
 #include "OS.h"
 #include "ImageLoader.h"
 #include "FileSystem.h"
-#include <stdio.h>
 
 namespace Pirate
 {
@@ -289,15 +288,15 @@ BOOL D3D9Driver::InitDriver(s32 width, s32 height, HWND hwnd, u32 bits, BOOL ful
 		m_pID3DDevice->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, TRUE);
 
 	m_bResetRenderStates = TRUE;
-/*
-	// create materials
-	createMaterialRenderers();
 
-	MaxTextureUnits = core::min_((u32)Caps.MaxSimultaneousTextures, MATERIAL_MAX_TEXTURES);
+	// create materials
+//	createMaterialRenderers();
+
+	m_uiMaxTextureUnits = Pirate::min_((u32)m_Caps.MaxSimultaneousTextures, MATERIAL_MAX_TEXTURES);
 
 	// set the renderstates
-	setRenderStates3DMode();
-*/
+	SetRenderStates3DMode();
+
 	// set maximal anisotropy
 	m_pID3DDevice->SetSamplerState(0, D3DSAMP_MAXANISOTROPY, min(16, m_Caps.MaxAnisotropy));
 	m_pID3DDevice->SetSamplerState(1, D3DSAMP_MAXANISOTROPY, min(16, m_Caps.MaxAnisotropy));
@@ -369,7 +368,7 @@ BOOL D3D9Driver::EndScene(u32 windowId, rect<s32>* sourceRect)
 	if (m_bDeviceLost)
 		return FALSE;
 
-//	m_FPSCounter.RegisterFrame(Timer::GetRealTime(), m_uiPrimitivesDrawn);
+	m_FPSCounter.RegisterFrame(Timer::GetRealTime(), m_uiPrimitivesDrawn);
 
 	HRESULT hr = m_pID3DDevice->EndScene();
 	if (FAILED(hr))
@@ -452,13 +451,7 @@ BOOL D3D9Driver::SetRenderStates3DMode()
 
 //	if (CurrentRenderMode != ERM_3D)
 //	{
-		// switch back the matrices
-		/*		pID3DDevice->SetTransform(D3DTS_VIEW, (D3DMATRIX*)((void*)&Matrices[ETS_VIEW]));
-		pID3DDevice->SetTransform(D3DTS_WORLD, (D3DMATRIX*)((void*)&Matrices[ETS_WORLD]));
-		pID3DDevice->SetTransform(D3DTS_PROJECTION, (D3DMATRIX*)((void*)&Matrices[ETS_PROJECTION]));
-		*/
 //		pID3DDevice->SetRenderState(D3DRS_STENCILENABLE, FALSE);
-
 //		ResetRenderStates = true;
 //	}
 
@@ -889,15 +882,91 @@ void D3D9Driver::AddTexture(D3D9Texture* texture)
 }
 
 //! Can be called by an IMaterialRenderer to make its work easier.
-void D3D9Driver::SetBasicRenderStates(const SMaterial& material, const SMaterial& lastMaterial, BOOL resetAllRenderstates)
+void D3D9Driver::SetBasicRenderStates(const SMaterial& material, const SMaterial& lastmaterial, BOOL resetAllRenderstates)
 {
-	for (u32 i=0; i<MATERIAL_MAX_TEXTURES; i++)
+	// Bilinear and/or trilinear
+	if (resetAllRenderstates ||
+		lastmaterial.Filter != material.Filter )
 	{
-		m_pID3DDevice->SetSamplerState(i, D3DSAMP_ADDRESSU, material.TextureWrap[i]);
-		m_pID3DDevice->SetSamplerState(i, D3DSAMP_ADDRESSV, material.TextureWrap[i]);
+		if (material.Filter >= D3DTEXF_LINEAR)
+		{
+			D3DTEXTUREFILTERTYPE tftMag = material.Filter;
+			D3DTEXTUREFILTERTYPE tftMin = material.Filter;
+			D3DTEXTUREFILTERTYPE tftMip = D3DTEXF_LINEAR;
+
+			for (u32 st=0; st<m_uiMaxTextureUnits; ++st)
+			{
+				m_pID3DDevice->SetSamplerState(st, D3DSAMP_MAGFILTER, tftMag);
+				m_pID3DDevice->SetSamplerState(st, D3DSAMP_MINFILTER, tftMin);
+				m_pID3DDevice->SetSamplerState(st, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+			}
+		}
+		else
+		{
+			for (u32 st=0; st<m_uiMaxTextureUnits; ++st)
+			{
+				m_pID3DDevice->SetSamplerState(st, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+				m_pID3DDevice->SetSamplerState(st, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+				m_pID3DDevice->SetSamplerState(st, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+			}
+		}
 	}
 
-	return;
+	// fillmode
+	if (resetAllRenderstates || lastmaterial.Wireframe != material.Wireframe)
+	{
+		if (material.Wireframe)
+			m_pID3DDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
+		else
+			m_pID3DDevice->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+	}
+
+	// zbuffer
+	if (resetAllRenderstates || lastmaterial.ZBuffer != material.ZBuffer)
+	{
+		switch (material.ZBuffer)
+		{
+		case 0:
+			m_pID3DDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
+			break;
+		case 1:
+			m_pID3DDevice->SetRenderState(D3DRS_ZENABLE, TRUE);
+			m_pID3DDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+			break;
+		case 2:
+			m_pID3DDevice->SetRenderState(D3DRS_ZENABLE, TRUE);
+			m_pID3DDevice->SetRenderState(D3DRS_ZFUNC, D3DCMP_EQUAL);
+			break;
+		}
+	}
+
+	// zwrite
+	if (resetAllRenderstates || lastmaterial.ZWriteEnable != material.ZWriteEnable)
+	{
+		if ( material.ZWriteEnable )
+			m_pID3DDevice->SetRenderState( D3DRS_ZWRITEENABLE, TRUE);
+		else
+			m_pID3DDevice->SetRenderState( D3DRS_ZWRITEENABLE, FALSE);
+	}
+
+	// back face culling
+
+	if (resetAllRenderstates || lastmaterial.BackfaceCulling != material.BackfaceCulling)
+	{
+		m_pID3DDevice->SetRenderState( D3DRS_CULLMODE, material.BackfaceCulling);
+	}
+
+	// texture address mode
+	for (u32 st=0; st<m_uiMaxTextureUnits; ++st)
+	{
+		if (resetAllRenderstates || lastmaterial.TextureWrap[st] != material.TextureWrap[st])
+		{
+			u32 mode = material.TextureWrap[st];
+			m_pID3DDevice->SetSamplerState(st, D3DSAMP_ADDRESSU, mode );
+			m_pID3DDevice->SetSamplerState(st, D3DSAMP_ADDRESSV, mode );
+		}
+	}
+
 }
 
 //! deletes all material renderers
@@ -997,10 +1066,8 @@ BOOL D3D9Driver::SetPixelShaderConstant(const c8* name, const f32* floats, int c
 s32 D3D9Driver::AddHighLevelShaderMaterialFromFiles(
 	const c8* vertexShaderProgram,
 	const c8* vertexShaderEntryPointName,
-	E_VERTEX_SHADER_TYPE vsCompileTarget,
 	const c8* pixelShaderProgram,
 	const c8* pixelShaderEntryPointName,
-	E_PIXEL_SHADER_TYPE psCompileTarget,
 	IShaderConstantSetCallBack* callback)
 {
 	FileReader* vsfile = 0;
@@ -1031,8 +1098,8 @@ s32 D3D9Driver::AddHighLevelShaderMaterialFromFiles(
 	}
 
 	s32 result = AddHighLevelShaderMaterialFromFiles(
-		vsfile, vertexShaderEntryPointName, vsCompileTarget,
-		psfile, pixelShaderEntryPointName, psCompileTarget,
+		vsfile, vertexShaderEntryPointName, 
+		psfile, pixelShaderEntryPointName, 
 		callback);
 
 	if (psfile)
@@ -1049,10 +1116,8 @@ s32 D3D9Driver::AddHighLevelShaderMaterialFromFiles(
 s32 D3D9Driver::AddHighLevelShaderMaterialFromFiles(
 	FileReader* vertexShaderProgram,
 	const c8* vertexShaderEntryPointName,
-	E_VERTEX_SHADER_TYPE vsCompileTarget,
 	FileReader* pixelShaderProgram,
 	const c8* pixelShaderEntryPointName,
-	E_PIXEL_SHADER_TYPE psCompileTarget,
 	IShaderConstantSetCallBack* callback)
 {
 	c8* vs = 0;
@@ -1081,8 +1146,8 @@ s32 D3D9Driver::AddHighLevelShaderMaterialFromFiles(
 	}
 
 	s32 result = this->AddHighLevelShaderMaterial(
-		vs, vertexShaderEntryPointName, vsCompileTarget,
-		ps, pixelShaderEntryPointName, psCompileTarget,
+		vs, vertexShaderEntryPointName,
+		ps, pixelShaderEntryPointName,
 		callback);
 
 	delete [] vs;
@@ -1096,10 +1161,8 @@ s32 D3D9Driver::AddHighLevelShaderMaterialFromFiles(
 s32 D3D9Driver::AddHighLevelShaderMaterial(
 	const c8* vertexShaderProgram,
 	const c8* vertexShaderEntryPointName,
-	E_VERTEX_SHADER_TYPE vsCompileTarget,
 	const c8* pixelShaderProgram,
 	const c8* pixelShaderEntryPointName,
-	E_PIXEL_SHADER_TYPE psCompileTarget,
 	IShaderConstantSetCallBack* callback)
 {
 	s32 nr = -1;
@@ -1108,10 +1171,8 @@ s32 D3D9Driver::AddHighLevelShaderMaterial(
 		m_pID3DDevice, this, nr,
 		vertexShaderProgram,
 		vertexShaderEntryPointName,
-		vsCompileTarget,
 		pixelShaderProgram,
 		pixelShaderEntryPointName,
-		psCompileTarget,
 		callback);
 
 	hlsl->Drop();
@@ -1191,11 +1252,8 @@ void D3D9Driver::DrawMeshBuffer( const SD3D9MeshBuffer* mb )
 	if (!mb)
 		return;
 
-/*	if (!checkPrimitiveCount(primitiveCount))
-		return;
+	m_uiPrimitivesDrawn += mb->GetPrimitiveCount();
 
-	CNullDriver::drawVertexPrimitiveList(vertices, vertexCount, indexList, primitiveCount, vType, pType);
-*/
 	IDirect3DVertexDeclaration9* pNewVT = mb->GetVertexType();
 	if (pNewVT != m_pLastVertexType)
 	{
@@ -1216,6 +1274,19 @@ void D3D9Driver::DrawMeshBuffer( const SD3D9MeshBuffer* mb )
 		m_pID3DDevice->SetIndices(mb->GetIndexBuffer());
 		m_pID3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, mb->GetVertexCount(), 0, mb->GetPrimitiveCount());		
 	}
+}
+
+// returns current frames per second value
+s32 D3D9Driver::GetFPS()
+{
+	return m_FPSCounter.GetFPS();
+}
+
+//! returns amount of primitives (mostly triangles) were drawn in the last frame.
+//! very useful method for statistics.
+u32 D3D9Driver::GetPrimitiveCountDrawn( u32 param )
+{
+	return 0 == param ? m_FPSCounter.GetPrimitive() : m_FPSCounter.GetPrimitiveAverage();
 }
 
 //! creates a video driver

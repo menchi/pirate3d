@@ -1,5 +1,5 @@
-#include "SMesh.h"
 #include "MeshCache.h"
+#include "SMesh.h"
 
 namespace Pirate
 {

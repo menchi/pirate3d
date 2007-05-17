@@ -2,8 +2,6 @@
 #define _PIRATE_S_MESH_H_
 
 #include "SMeshBuffer.h"
-#include "pirateArray.h"
-#include "RefObject.h"
 
 namespace Pirate
 {
