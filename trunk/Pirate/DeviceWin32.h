@@ -1,18 +1,17 @@
 #ifndef _PIRATE_BIG_PIRATE_H_
 #define _PIRATE_BIG_PIRATE_H_
 
-#include "D3D9DriverWin32.h"
-#include "OSOperator.h"
 #include "IEventReceiver.h"
-#include "FileSystem.h"
-#include <Windows.h>
+#include "position2d.h"
 
 namespace Pirate
 {
 
+class D3D9Driver;
 class Logger;
-class IEventReceiver;
 class SceneManager;
+class FileSystem;
+class OSOperator;
 
 class DeviceWin32 : public virtual RefObject
 {
@@ -31,6 +30,7 @@ public:
 
 	//! send the event to the right receiver
 	void PostEventFromUser(SEvent event);
+
 	void OnResized();
 
 	//! return file system
@@ -41,6 +41,12 @@ public:
 
 	//! Sets a new event receiver to receive events
 	void SetEventReceiver(IEventReceiver* receiver);
+
+	//! notifies the device that it should close itself
+	void CloseDevice();
+
+	//! sets the caption of the window
+	void SetWindowCaption(const wchar_t* text);
 
 	//! Implementation of the win32 cursor control
 	class CursorControl : public virtual RefObject

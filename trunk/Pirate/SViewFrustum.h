@@ -1,8 +1,6 @@
 #ifndef _PIRATE_S_VIEW_FRUSTUM_H_
 #define _PIRATE_S_VIEW_FRUSTUM_H_
 
-#include "plane3d.h"
-#include "vector3d.h"
 #include "aabbox3d.h"
 #include "matrix4.h"
 

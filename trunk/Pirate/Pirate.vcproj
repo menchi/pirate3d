@@ -227,6 +227,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\D3D9Driver.h"
+				>
+			</File>
+			<File
 				RelativePath=".\D3D9DriverWin32.cpp"
 				>
 			</File>
@@ -264,10 +268,6 @@
 			</File>
 			<File
 				RelativePath=".\ImageLoader.h"
-				>
-			</File>
-			<File
-				RelativePath=".\ImageUtility.h"
 				>
 			</File>
 			<File
@@ -368,6 +368,14 @@
 			</File>
 			<File
 				RelativePath=".\CameraSceneNode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EmptySceneNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\EmptySceneNode.h"
 				>
 			</File>
 			<File

@@ -1,10 +1,9 @@
 #ifndef _PIRATE_MESH_BUFFER_H_
 #define _PIRATE_MESH_BUFFER_H_
 
-#include "D3D9DriverWin32.h"
-#include "aabbox3d.h"
+#include "D3D9Driver.h"
 #include "SMaterial.h"
-#include "pirateArray.h"
+#include "aabbox3d.h"
 
 namespace Pirate
 {

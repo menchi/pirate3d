@@ -1,4 +1,4 @@
-#include "D3D9DriverWin32.h"
+#include "D3D9Driver.h"
 #include "SMesh.h"
 #include "FileSystem.h"
 #include "OS.h"
@@ -198,9 +198,10 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	SMesh* pMesh = new SMesh();
 	for (int j=0; j<faceCount; j++)
 	{
-		SD3D9MeshBuffer* pMB = new SD3D9MeshBuffer(m_pDriver, BspVertexDecl);
+		SD3D9MeshBuffer* pMB = NULL;
 		if (j==0)
 		{
+			pMB = new SD3D9MeshBuffer(m_pDriver, BspVertexDecl);
 			pMB->CreateVertexBuffer(0, sizeof(BSP_VT), tmpVertices.size(), D3DUSAGE_WRITEONLY);
 			BSP_VT* pVert;
 			pMB->GetVertexBuffer(0)->Lock(0, 0, (void**)&pVert, 0);
@@ -209,6 +210,7 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 		}
 		else
 		{
+			pMB = new SD3D9MeshBuffer(m_pDriver, pMesh->GetMeshBuffer(0)->GetVertexType());
 			pMB->SetVertexBuffer(0, tmpVertices.size(), pMesh->GetMeshBuffer(0)->GetVertexBuffer(0));
 		}
 

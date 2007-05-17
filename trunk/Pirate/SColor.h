@@ -1,7 +1,6 @@
 #ifndef _PIRATE_COLOR_H_
 #define _PIRATE_COLOR_H_
 
-#include "pirateTypes.h"
 #include "pirateMath.h"
 
 namespace Pirate

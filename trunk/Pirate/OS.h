@@ -1,8 +1,6 @@
 #ifndef _PIRATE_OS_H_
 #define _PIRATE_OS_H_
 
-#include "CompileConfig.h"
-#include "pirateTypes.h"
 #include "Logger.h"
 
 namespace Pirate
@@ -17,6 +15,8 @@ public:
 	static s32 ByteSwap(s32 num);
 	static f32 ByteSwap(f32 num);
 };
+
+class Logger;
 
 class Printer
 {

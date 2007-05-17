@@ -1,13 +1,9 @@
-#ifndef _PIRATE_D3D9DRIVER_H_
-#define _PIRATE_D3D9DRIVER_H_
-#include "D3D9HLSLShader.h"
-#include "RefObject.h"
-#include "SColor.h"
-#include "rect.h"
-#include "pirateArray.h"
+#ifndef _PIRATE_D3D9DRIVER_WIN32_H_
+#define _PIRATE_D3D9DRIVER_WIN32_H_
+
 #include "D3D9Texture.h"
 #include "SMaterial.h"
-#include <windows.h>
+#include "pirateArray.h"
 
 namespace Pirate
 {
@@ -95,8 +91,71 @@ struct SExposedVideoData
 	s64 HWnd;
 };
 
+class FPSCounter  
+{
+public:
+	FPSCounter()
+		: m_iFPS(60), m_uiPrimitive(0), m_uiStartTime(0), m_uiFramesCounted(0),
+		m_uiPrimitivesCounted(0), m_uiPrimitiveAverage(0)
+	{
+	}
+
+	//! returns current fps
+	s32 GetFPS() 
+	{
+		return m_iFPS;
+	}
+	//! returns primitive count
+	u32 GetPrimitive()
+	{
+		return m_uiPrimitive;
+	}
+
+	//! returns average primitive count
+	u32 GetPrimitiveAverage()
+	{
+		return m_uiPrimitiveAverage;
+	}
+
+	//! to be called every frame
+	void RegisterFrame(u32 now, u32 primitive)
+	{
+		++m_uiFramesCounted;
+		m_uiPrimitive += primitive;
+		m_uiPrimitivesCounted += primitive;
+
+		u32 milliseconds = now - m_uiStartTime;
+
+		if (milliseconds >= 1500 )
+		{
+			f32 invMilli = reciprocal ( (f32) milliseconds );
+
+			m_iFPS = ceil32 ( ( 1000 * m_uiFramesCounted ) * invMilli );
+			m_uiPrimitiveAverage = ceil32 ( ( 1000 * m_uiPrimitivesCounted ) * invMilli );
+
+			m_uiFramesCounted = 0;
+			m_uiPrimitivesCounted = 0;
+			m_uiStartTime = now;
+		}
+	}
+
+private:
+
+	s32 m_iFPS;
+	u32 m_uiPrimitive;
+	u32 m_uiStartTime;
+
+	u32 m_uiFramesCounted;
+	u32 m_uiPrimitivesCounted;
+	u32 m_uiPrimitiveAverage;
+};
+
+//class SColor;
 class FileSystem;
 class FileReader;
+class D3D9HLSLShader;
+class IShaderConstantSetCallBack;
+
 struct SD3D9MeshBuffer;
 
 class D3D9Driver : public virtual RefObject
@@ -203,10 +262,8 @@ public:
 	s32 AddHighLevelShaderMaterialFromFiles(
 		const c8* vertexShaderProgram,
 		const c8* vertexShaderEntryPointName = "main",
-		E_VERTEX_SHADER_TYPE vsCompileTarget = EVST_VS_2_0,
 		const c8* pixelShaderProgram = 0, 
 		const c8* pixelShaderEntryPointName = "main",
-		E_PIXEL_SHADER_TYPE psCompileTarget = EPST_PS_2_0,
 		IShaderConstantSetCallBack* callback = 0); 
 
 	//! Like IGPUProgrammingServices::addShaderMaterial() (look there for a detailed description),
@@ -214,10 +271,8 @@ public:
 	s32 AddHighLevelShaderMaterialFromFiles(
 		FileReader* vertexShaderProgram,
 		const c8* vertexShaderEntryPointName = "main",
-		E_VERTEX_SHADER_TYPE vsCompileTarget = EVST_VS_2_0,
 		FileReader* pixelShaderProgram = 0, 
 		const c8* pixelShaderEntryPointName = "main",
-		E_PIXEL_SHADER_TYPE psCompileTarget = EPST_PS_2_0,
 		IShaderConstantSetCallBack* callback = 0); 
 
 	//! Adds a new material renderer to the VideoDriver, based on a high level shading
@@ -225,11 +280,16 @@ public:
 	s32 AddHighLevelShaderMaterial(
 		const c8* vertexShaderProgram,
 		const c8* vertexShaderEntryPointName = "main",
-		E_VERTEX_SHADER_TYPE vsCompileTarget = EVST_VS_2_0,
 		const c8* pixelShaderProgram = 0,
 		const c8* pixelShaderEntryPointName = "main",
-		E_PIXEL_SHADER_TYPE psCompileTarget = EPST_PS_2_0,
 		IShaderConstantSetCallBack* callback = 0);
+
+	// returns current frames per second value
+	s32 GetFPS();
+
+	//! returns amount of primitives (mostly triangles) were drawn in the last frame.
+	//! very useful method for statistics.
+	u32 GetPrimitiveCountDrawn( u32 param );
 
 private:
 	//! resets the device
@@ -308,6 +368,7 @@ private:
 
 	u32 m_uiPrimitivesDrawn;
 	SExposedVideoData m_ExposedData;
+	FPSCounter m_FPSCounter;
 };
 
 }

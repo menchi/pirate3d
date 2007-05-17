@@ -1,6 +1,6 @@
 #include "D3D9HLSLShader.h"
+#include "D3D9Driver.h"
 #include "IShaderConstantSetCallback.h"
-#include "D3D9DriverWin32.h"
 #include "OS.h"
 
 namespace Pirate
@@ -11,10 +11,8 @@ D3D9HLSLShader::D3D9HLSLShader(IDirect3DDevice9* d3ddev,
 	D3D9Driver* driver, s32& outMaterialTypeNr, 
 	const c8* vertexShaderProgram,
 	const c8* vertexShaderEntryPointName,
-	E_VERTEX_SHADER_TYPE vsCompileTarget,
 	const c8* pixelShaderProgram, 
 	const c8* pixelShaderEntryPointName,
-	E_PIXEL_SHADER_TYPE psCompileTarget,
 	IShaderConstantSetCallBack* callback 
 )
 : m_pID3DDevice(d3ddev), m_pDriver(driver), m_pCallBack(callback), 
@@ -27,19 +25,10 @@ m_pVSConstantsTable(0), m_pPSConstantsTable(0)
 	outMaterialTypeNr = -1;
 
 	// now create shaders
-
-	if (vsCompileTarget < 0 || vsCompileTarget > EVST_COUNT)
-	{
-		Printer::Log("Invalid HLSL vertex shader compilation target");
-		return;
-	}
-
-	if (!CreateHLSLVertexShader(vertexShaderProgram, 
-		vertexShaderEntryPointName, VERTEX_SHADER_TYPE_NAMES[vsCompileTarget]))
+	if (!CreateHLSLVertexShader(vertexShaderProgram, vertexShaderEntryPointName, "vs_3_0"))
 		return;
 
-	if (!CreateHLSLPixelShader(pixelShaderProgram, 
-		pixelShaderEntryPointName, PIXEL_SHADER_TYPE_NAMES[psCompileTarget]))
+	if (!CreateHLSLPixelShader(pixelShaderProgram, pixelShaderEntryPointName, "ps_3_0"))
 		return;
 
 	// register myself as new material
@@ -120,44 +109,7 @@ HRESULT D3D9HLSLShader::StubD3DXCompileShader(LPCSTR pSrcData, UINT SrcDataLen, 
 	LPCSTR pProfile, DWORD Flags, LPD3DXBUFFER* ppShader,
 	LPD3DXBUFFER* ppErrorMsgs, LPD3DXCONSTANTTABLE* ppConstantTable)
 {
-
-		// try to load shader functions from the dll and print error if failed.
-
-		// D3DXCompileShader
-		typedef HRESULT (WINAPI *D3DXCompileShaderFunction)(LPCSTR pSrcData, UINT SrcDataLen, CONST D3DXMACRO* pDefines,
-			LPD3DXINCLUDE pInclude, LPCSTR pFunctionName,
-			LPCSTR pProfile, DWORD Flags, LPD3DXBUFFER* ppShader,
-			LPD3DXBUFFER* ppErrorMsgs, LPD3DXCONSTANTTABLE* ppConstantTable);
-
-		static BOOL LoadFailed = FALSE;
-		static D3DXCompileShaderFunction pFn = 0;
-
-		if (!pFn && !LoadFailed)
-		{
-			// try to load dll
-			stringc strDllName = "d3dx9_";
-			strDllName += (int)D3DX_SDK_VERSION;
-			strDllName += ".dll";
-
-			HMODULE hMod = LoadLibraryA(strDllName.c_str());
-			if (hMod)
-				pFn = (D3DXCompileShaderFunction)GetProcAddress(hMod, "D3DXCompileShader");
-
-			if (!pFn)
-			{
-				LoadFailed = TRUE;
-				Printer::Log("Could not load shader function D3DXCompileShader from dll, shaders disabled", 
-					strDllName.c_str(), ELL_ERROR);				
-			}
-		}
-
-		if (pFn)
-		{
-			// call already loaded function
-			return (*pFn)(pSrcData, SrcDataLen, pDefines, pInclude, pFunctionName, pProfile, Flags, ppShader, ppErrorMsgs, ppConstantTable);
-		}
-
-	return 0;
+	return D3DXCompileShader(pSrcData, SrcDataLen, pDefines, pInclude, pFunctionName, pProfile, Flags, ppShader, ppErrorMsgs, ppConstantTable);
 }
 
 HRESULT D3D9HLSLShader::StubD3DXCompileShaderFromFile(LPCSTR pSrcFile, CONST D3DXMACRO* pDefines, 
@@ -165,43 +117,7 @@ HRESULT D3D9HLSLShader::StubD3DXCompileShaderFromFile(LPCSTR pSrcFile, CONST D3D
 	LPCSTR pProfile, DWORD Flags, LPD3DXBUFFER* ppShader, LPD3DXBUFFER* ppErrorMsgs,
 	LPD3DXCONSTANTTABLE* ppConstantTable)
 {
-	// try to load shader functions from the dll and print error if failed.
-
-	// D3DXCompileShaderFromFileA
-	typedef HRESULT (WINAPI *D3DXCompileShaderFromFileFunction)(LPCSTR pSrcFile,
-		CONST D3DXMACRO* pDefines, LPD3DXINCLUDE pInclude, LPCSTR pFunctionName,
-		LPCSTR pProfile, DWORD Flags, LPD3DXBUFFER* ppShader, LPD3DXBUFFER* ppErrorMsgs,
-		LPD3DXCONSTANTTABLE* ppConstantTable);
-
-	static BOOL LoadFailed = FALSE;
-	static D3DXCompileShaderFromFileFunction pFn = 0;
-
-	if (!pFn && !LoadFailed)
-	{
-		// try to load dll
-		stringc strDllName = "d3dx9_";
-		strDllName += (int)D3DX_SDK_VERSION;
-		strDllName += ".dll";
-
-		HMODULE hMod = LoadLibraryA(strDllName.c_str());
-		if (hMod)
-			pFn = (D3DXCompileShaderFromFileFunction)GetProcAddress(hMod, "D3DXCompileShaderFromFileA");
-
-		if (!pFn)
-		{
-			LoadFailed = TRUE;
-			Printer::Log("Could not load shader function D3DXCompileShaderFromFileA from dll, shaders disabled", 
-				strDllName.c_str(), ELL_ERROR);				
-		}
-	}
-
-	if (pFn)
-	{
-		// call already loaded function
-		return (*pFn)(pSrcFile, pDefines, pInclude, pFunctionName, pProfile, Flags, ppShader, ppErrorMsgs, ppConstantTable);
-	}
-
-	return 0;
+	return D3DXCompileShaderFromFileA(pSrcFile, pDefines, pInclude, pFunctionName, pProfile, Flags, ppShader, ppErrorMsgs, ppConstantTable);
 }
 
 BOOL D3D9HLSLShader::CreateHLSLVertexShader(const char* vertexShaderProgram,

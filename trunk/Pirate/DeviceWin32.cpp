@@ -1,7 +1,9 @@
 #include "DeviceWin32.h"
-#include "OS.h"
-#include "pirateList.h"
+#include "D3D9Driver.h"
 #include "SceneManager.h"
+#include "FileSystem.h"
+#include "OS.h"
+#include "OSOperator.h"
 
 namespace Pirate
 {
@@ -18,7 +20,7 @@ struct SEnvMapper
 
 Pirate::list<SEnvMapper> g_EnvMap;
 
-SEnvMapper* getEnvMapperFromHWnd(HWND hWnd)
+SEnvMapper* GetEnvMapperFromHWnd(HWND hWnd)
 {
 	Pirate::list<SEnvMapper>::Iterator it = g_EnvMap.begin();
 	for (; it!= g_EnvMap.end(); ++it)
@@ -30,7 +32,7 @@ SEnvMapper* getEnvMapperFromHWnd(HWND hWnd)
 	return NULL;
 }
 
-Pirate::DeviceWin32* getDeviceFromHWnd(HWND hWnd)
+Pirate::DeviceWin32* GetDeviceFromHWnd(HWND hWnd)
 {
 	Pirate::list<SEnvMapper>::Iterator it = g_EnvMap.begin();
 	for (; it!= g_EnvMap.end(); ++it)
@@ -75,7 +77,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 
 	case WM_SETCURSOR:
-		envm = getEnvMapperFromHWnd(hWnd);
+		envm = GetEnvMapperFromHWnd(hWnd);
 		if (envm &&	!envm->PirateDev->GetWin32CursorControl()->IsVisible())
 		{
 			SetCursor(NULL);
@@ -94,7 +96,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		event.MouseInput.X = LOWORD(lParam) - p.x;
 		event.MouseInput.Y = HIWORD(lParam) - p.y;
 
-		dev = getDeviceFromHWnd(hWnd);
+		dev = GetDeviceFromHWnd(hWnd);
 		if (dev)
 			dev->PostEventFromUser(event);
 		break;
@@ -106,7 +108,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		event.MouseInput.Event = Pirate::EMIE_LMOUSE_PRESSED_DOWN;
 		event.MouseInput.X = (short)LOWORD(lParam);
 		event.MouseInput.Y = (short)HIWORD(lParam);
-		dev = getDeviceFromHWnd(hWnd);
+		dev = GetDeviceFromHWnd(hWnd);
 		if (dev)
 			dev->PostEventFromUser(event);
 		return 0;
@@ -122,7 +124,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		event.MouseInput.Event = Pirate::EMIE_LMOUSE_LEFT_UP;
 		event.MouseInput.X = (short)LOWORD(lParam);
 		event.MouseInput.Y = (short)HIWORD(lParam);
-		dev = getDeviceFromHWnd(hWnd);
+		dev = GetDeviceFromHWnd(hWnd);
 		if (dev)
 			dev->PostEventFromUser(event);
 		return 0;
@@ -134,7 +136,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		event.MouseInput.Event = Pirate::EMIE_RMOUSE_PRESSED_DOWN;
 		event.MouseInput.X = (short)LOWORD(lParam);
 		event.MouseInput.Y = (short)HIWORD(lParam);
-		dev = getDeviceFromHWnd(hWnd);
+		dev = GetDeviceFromHWnd(hWnd);
 		if (dev)
 			dev->PostEventFromUser(event);
 		return 0;
@@ -150,7 +152,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		event.MouseInput.Event = Pirate::EMIE_RMOUSE_LEFT_UP;
 		event.MouseInput.X = (short)LOWORD(lParam);
 		event.MouseInput.Y = (short)HIWORD(lParam);
-		dev = getDeviceFromHWnd(hWnd);
+		dev = GetDeviceFromHWnd(hWnd);
 		if (dev)
 			dev->PostEventFromUser(event);
 		return 0;
@@ -162,7 +164,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		event.MouseInput.Event = Pirate::EMIE_MMOUSE_PRESSED_DOWN;
 		event.MouseInput.X = (short)LOWORD(lParam);
 		event.MouseInput.Y = (short)HIWORD(lParam);
-		dev = getDeviceFromHWnd(hWnd);
+		dev = GetDeviceFromHWnd(hWnd);
 		if (dev)
 			dev->PostEventFromUser(event);
 		return 0;
@@ -178,7 +180,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		event.MouseInput.Event = Pirate::EMIE_MMOUSE_LEFT_UP;
 		event.MouseInput.X = (short)LOWORD(lParam);
 		event.MouseInput.Y = (short)HIWORD(lParam);
-		dev = getDeviceFromHWnd(hWnd);
+		dev = GetDeviceFromHWnd(hWnd);
 		if (dev)
 			dev->PostEventFromUser(event);
 		return 0;
@@ -188,7 +190,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		event.MouseInput.Event = Pirate::EMIE_MOUSE_MOVED;
 		event.MouseInput.X = (short)LOWORD(lParam);
 		event.MouseInput.Y = (short)HIWORD(lParam);
-		dev = getDeviceFromHWnd(hWnd);
+		dev = GetDeviceFromHWnd(hWnd);
 		if (dev)
 			dev->PostEventFromUser(event);
 		return 0;
@@ -198,7 +200,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			event.EventType = Pirate::EET_KEY_INPUT_EVENT;
 			event.KeyInput.Key = (Pirate::EKEY_CODE)wParam;
 			event.KeyInput.PressedDown = true;
-			dev = getDeviceFromHWnd(hWnd);
+			dev = GetDeviceFromHWnd(hWnd);
 
 			WORD KeyAsc=0;
 			GetKeyboardState(allKeys);
@@ -218,7 +220,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			event.EventType = Pirate::EET_KEY_INPUT_EVENT;
 			event.KeyInput.Key = (Pirate::EKEY_CODE)wParam;
 			event.KeyInput.PressedDown = false;
-			dev = getDeviceFromHWnd(hWnd);
+			dev = GetDeviceFromHWnd(hWnd);
 
 			WORD KeyAsc=0;
 			GetKeyboardState(allKeys);
@@ -237,7 +239,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		{
 			// resize
-			dev = getDeviceFromHWnd(hWnd);
+			dev = GetDeviceFromHWnd(hWnd);
 			if (dev)
 				dev->OnResized();
 		}
@@ -635,6 +637,18 @@ void DeviceWin32::CreateGUIAndScene()
 DeviceWin32::CursorControl* DeviceWin32::GetWin32CursorControl()
 {
 	return m_pWin32CursorControl;
+}
+
+//! notifies the device that it should close itself
+void DeviceWin32::CloseDevice()
+{
+	DestroyWindow(m_HWnd);
+}
+
+//! sets the caption of the window
+void DeviceWin32::SetWindowCaption(const wchar_t* text)
+{
+	SetWindowTextW(m_HWnd, text);
 }
 
 }

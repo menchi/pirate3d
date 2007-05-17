@@ -1,9 +1,9 @@
 #ifndef _PIRATE_READ_FILE_H_
 #define _PIRATE_READ_FILE_H_
 
-#include <stdio.h>
 #include "RefObject.h"
 #include "pirateString.h"
+#include <stdio.h>
 
 namespace Pirate
 {

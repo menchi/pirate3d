@@ -1,9 +1,8 @@
 #ifndef _PIRATE_CAMERA_FPS_SCENE_NODE_H_
 #define _PIRATE_CAMERA_FPS_SCENE_NODE_H_
 
-#include "DeviceWin32.h"
 #include "CameraSceneNode.h"
-#include "vector2d.h"
+#include "DeviceWin32.h"
 #include "pirateArray.h"
 
 namespace Pirate

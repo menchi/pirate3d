@@ -20,9 +20,17 @@
 
 #define _PIRATE_COMPILE_WITH_DIRECT3D_9_PC_
 
+#include <windows.h>
+#include <d3d9.h>
+#include <d3dx9.h>
+
+#pragma comment( lib, "d3dx9" )
+
 #elif defined(_PIRATE_XBOX_)
 
 #define _PIRATE_COMPILE_WITH_DIRECT3D_9_XBOX_
+
+#include <xtl.h>
 
 #endif
 

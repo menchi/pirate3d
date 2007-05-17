@@ -1,11 +1,13 @@
 #ifndef _PIRATE_MESH_SCENE_NODE_H_
 #define _PIRATE_MESH_SCENE_NODE_H_
 
-#include "SMesh.h"
 #include "SceneNode.h"
+#include "pirateArray.h"
 
 namespace Pirate
 {
+
+struct SMesh;
 
 class MeshSceneNode : public SceneNode
 {

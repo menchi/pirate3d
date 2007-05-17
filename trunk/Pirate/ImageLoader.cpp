@@ -1,10 +1,7 @@
-#include <d3dx9tex.h>
 #include "ImageLoader.h"
-#include "OS.h"
 #include "Image.h"
-#include "pirateString.h"
-
-#pragma comment( lib, "d3dx9" )
+#include "FileReader.h"
+#include "OS.h"
 
 namespace Pirate
 {

@@ -1,12 +1,8 @@
 #ifndef _PIRATE_DIRECTX9_TEXTURE_H_
 #define _PIRATE_DIRECTX9_TEXTURE_H_
 
-#include "CompileConfig.h"
-
-#include <d3d9.h>
-
-#include "pirateString.h"
 #include "Image.h"
+#include "pirateString.h"
 
 namespace Pirate
 {
@@ -78,6 +74,8 @@ inline E_TEXTURE_CREATION_FLAG GetTextureFormatFromFlags(u32 flags)
 }
 
 class D3D9Driver;
+class Image;
+
 /*!
 interface for a Video Driver dependent Texture.
 */

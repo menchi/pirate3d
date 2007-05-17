@@ -1,6 +1,5 @@
 #include "FileSystem.h"
 #include "OS.h"
-#include "CompileConfig.h"
 #include <stdio.h>
 
 #ifdef _PIRATE_WINDOWS_
