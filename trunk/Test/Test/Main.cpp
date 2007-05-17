@@ -42,8 +42,10 @@ void main()
 	IDirect3DDevice9* pD3DDevice = pDriver->GetExposedVideoData().D3DDev9;
 
 	SceneManager* pSceneManager = pDevice->GetSceneManager();
-	CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNodeFPS(pDevice->GetWin32CursorControl());
-	//CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNode();
+	//CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNodeFPS(pDevice->GetWin32CursorControl());
+	CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNode();
+	pCamera->SetPosition(vector3df(0.f, 0.f, 1000.f));
+	pCamera->SetTarget(vector3df(0.f, 0.f, 2000.f));
 	SMesh* pMesh = pSceneManager->GetMesh("../../Media/firstmap.bsp");
 	MeshSceneNode* pMeshNode = pSceneManager->AddMeshSceneNode(pMesh);
 	pMeshNode->SetRotation(vector3df(-90.f, 0.f, 0.f));

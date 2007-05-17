@@ -9,6 +9,7 @@
 #include "CameraFPSSceneNode.h"
 #include "IShaderConstantSetCallback.h"
 #include "SMesh.h"
+#include "FileSystem.h"
 
 namespace Pirate
 {
