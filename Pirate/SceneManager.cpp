@@ -231,6 +231,8 @@ BOOL SceneManager::IsCulled(SceneNode* node)
 	if (!cam)
 		return FALSE;
 
+	// Write frustum culling here!
+/*
 	if ( node->GetAutomaticCulling() )
 	{
 		// can be seen by cam pyramid planes ?
@@ -268,7 +270,7 @@ BOOL SceneManager::IsCulled(SceneNode* node)
 
 		return !visible;
 	}
-
+*/
 	return FALSE;
 }
 

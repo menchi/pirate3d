@@ -92,7 +92,7 @@ struct SD3D9MeshBuffer : public virtual RefObject
 		if (i == -1)
 		{
 			IDirect3DVertexBuffer9* pVB = NULL;
-			m_pID3DDevice->CreateVertexBuffer(vertexSize*numVerts, usage, 0, D3DPOOL_MANAGED, &pVB, NULL);
+			m_pID3DDevice->CreateVertexBuffer(vertexSize*numVerts, usage, 0, D3DPOOL_DEFAULT, &pVB, NULL);
 			if (pVB)
 			{
 				tmp.VertexBufferIndex = m_VertexBuffers.size();
@@ -107,7 +107,7 @@ struct SD3D9MeshBuffer : public virtual RefObject
 		{
 			m_SrcToVBMap.push_back(tmp);
 			m_VertexBuffers[m_SrcToVBMap[i].VertexBufferIndex]->Release();
-			m_pID3DDevice->CreateVertexBuffer(vertexSize*numVerts, usage, 0, D3DPOOL_MANAGED, &m_VertexBuffers[i], NULL);
+			m_pID3DDevice->CreateVertexBuffer(vertexSize*numVerts, usage, 0, D3DPOOL_DEFAULT, &m_VertexBuffers[i], NULL);
 			if (m_VertexBuffers[i])
 			{
 				m_uiVertexCount = numVerts;
@@ -175,7 +175,7 @@ struct SD3D9MeshBuffer : public virtual RefObject
 
 		if (!m_pIndexBuffer)
 		{
-			m_pID3DDevice->CreateIndexBuffer(indexSize*numIndexes, usage, format, D3DPOOL_MANAGED, &m_pIndexBuffer, NULL);
+			m_pID3DDevice->CreateIndexBuffer(indexSize*numIndexes, usage, format, D3DPOOL_DEFAULT, &m_pIndexBuffer, NULL);
 			if (m_pIndexBuffer)
 			{
 				m_uiIndexCount = numIndexes;
@@ -185,7 +185,7 @@ struct SD3D9MeshBuffer : public virtual RefObject
 		else
 		{
 			m_pIndexBuffer->Release();
-			m_pID3DDevice->CreateIndexBuffer(indexSize*numIndexes, usage, format, D3DPOOL_MANAGED, &m_pIndexBuffer, NULL);
+			m_pID3DDevice->CreateIndexBuffer(indexSize*numIndexes, usage, format, D3DPOOL_DEFAULT, &m_pIndexBuffer, NULL);
 			if (m_pIndexBuffer)
 			{
 				m_uiIndexCount = numIndexes;

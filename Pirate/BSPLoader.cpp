@@ -195,6 +195,14 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 		tmpIndices.push_back(faceIndices);
 	}
 
+	stringc fullname = file->GetFileName();
+	stringc relpath = "";
+	s32 pathend = fullname.findLast('/');
+	if (pathend == -1)
+		pathend = fullname.findLast('\\');
+	if (pathend != -1)
+		relpath = fullname.subString(0, pathend + 1);
+
 	SMesh* pMesh = new SMesh();
 	for (int j=0; j<faceCount; j++)
 	{
@@ -215,7 +223,7 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 		}
 
 		s32 indexBufferSize = (pFaces[j].numedges - 2) * 3 * sizeof(u32);
-		pMB->CreateIndexBuffer(indexBufferSize);
+		pMB->CreateIndexBuffer((pFaces[j].numedges - 2) * 3);
 		u32* pIndices;
 		pMB->GetIndexBuffer()->Lock(0, 0, (void**)&pIndices, 0);
 		memcpy(pIndices, tmpIndices[j].const_pointer(), indexBufferSize);
@@ -224,8 +232,7 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 		stringc textureName = pTexStringData + pTexStringTable[pTexData[pTexinfos[pFaces[j].texinfo].texdata].nameStringTableID];
 		s32 lastSlash = textureName.findLast('/');
 		textureName = textureName.c_str() + lastSlash + 1;
-		stringc workingDir = "../../Media/";
-		textureName = workingDir + textureName + ".tga";
+		textureName = relpath + textureName + ".tga";
 		D3D9Texture* pTexture = m_pDriver->GetTexture(textureName.c_str());
 		pMB->m_Material.Textures[0] = pTexture;
 
@@ -239,9 +246,12 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 		u8* pLuxels = (u8*)pD3DLightmap->Lock();
 		for (s32 i=0; i<luxelCount; i++)
 		{
-			pLuxels[i*4]   = (u8)round(clamp<float>(pLightmap[i].b * powf(2.0f, pLightmap[i].exponent), 0.0f, 255.0f));
-			pLuxels[i*4+1] = (u8)round(clamp<float>(pLightmap[i].g * powf(2.0f, pLightmap[i].exponent), 0.0f, 255.0f));
-			pLuxels[i*4+2] = (u8)round(clamp<float>(pLightmap[i].r * powf(2.0f, pLightmap[i].exponent), 0.0f, 255.0f));
+			pLuxels[i*4]   = (u8)(powf((round(clamp<float>(pLightmap[i].b * powf(2.0f, pLightmap[i].exponent), 0.0f, 255.0f)))
+				/ 255.f, 1.f/2.2f) *255.f);
+			pLuxels[i*4+1] = (u8)(powf((round(clamp<float>(pLightmap[i].g * powf(2.0f, pLightmap[i].exponent), 0.0f, 255.0f)))
+				/ 255.f, 1.f/2.2f) *255.f);
+			pLuxels[i*4+2] = (u8)(powf((round(clamp<float>(pLightmap[i].r * powf(2.0f, pLightmap[i].exponent), 0.0f, 255.0f)))
+				/ 255.f, 1.f/2.2f) *255.f);
 			pLuxels[i*4+3] = 255;
 		}
 		pD3DLightmap->Unlock();

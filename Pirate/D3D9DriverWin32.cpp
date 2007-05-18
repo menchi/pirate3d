@@ -131,7 +131,7 @@ BOOL D3D9Driver::InitDriver(s32 width, s32 height, HWND hwnd, u32 bits, BOOL ful
 	{
 		m_Present.BackBufferWidth = width;
 		m_Present.BackBufferHeight = height;
-		// request 32bit mode if user specified 32 bit, added by Thomas Stüfe
+		// request 32bit mode if user specified 32 bit
 		if (bits == 32)
 			m_Present.BackBufferFormat = D3DFMT_X8R8G8B8;
 		else

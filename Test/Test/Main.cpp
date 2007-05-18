@@ -36,16 +36,14 @@ void main()
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-	DeviceWin32* pDevice = InvokePirate(512, 512);
+	DeviceWin32* pDevice = InvokePirate(800, 600);
 	D3D9Driver* pDriver = pDevice->GetVideoDriver();
 
 	IDirect3DDevice9* pD3DDevice = pDriver->GetExposedVideoData().D3DDev9;
 
 	SceneManager* pSceneManager = pDevice->GetSceneManager();
-	//CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNodeFPS(pDevice->GetWin32CursorControl());
-	CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNode();
-	pCamera->SetPosition(vector3df(0.f, 0.f, 1000.f));
-	pCamera->SetTarget(vector3df(0.f, 0.f, 2000.f));
+	CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNodeFPS(pDevice->GetWin32CursorControl());
+	//CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNode();
 	SMesh* pMesh = pSceneManager->GetMesh("../../Media/firstmap.bsp");
 	MeshSceneNode* pMeshNode = pSceneManager->AddMeshSceneNode(pMesh);
 	pMeshNode->SetRotation(vector3df(-90.f, 0.f, 0.f));
