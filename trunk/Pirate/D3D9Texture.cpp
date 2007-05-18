@@ -84,7 +84,7 @@ D3D9Texture::D3D9Texture(D3D9Driver* driver, u32 flags, const char* name)
 
 	D3DXIMAGE_INFO info;
 	HRESULT hr = D3DXCreateTextureFromFileExA(m_pDevice, name, 0, 0, !generateMipLevels, 0, D3DFMT_FROM_FILE,
-							 				  D3DPOOL_MANAGED, D3DX_FILTER_NONE, D3DX_DEFAULT, 0, &info, NULL, &m_pTexture);
+							 				  D3DPOOL_DEFAULT, D3DX_FILTER_NONE, D3DX_DEFAULT, 0, &info, NULL, &m_pTexture);
 
 	m_ImageSize = dimension2d<s32>(info.Width, info.Height);
 
