@@ -10,6 +10,7 @@
 #include "IShaderConstantSetCallback.h"
 #include "SMesh.h"
 #include "FileSystem.h"
+#include "os.h"
 
 namespace Pirate
 {

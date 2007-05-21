@@ -5,7 +5,7 @@
 #include "FileSystem.h"
 #include "MeshCache.h"
 #include "SMesh.h"
-#include "BspLoader.h"
+#include "BSPFileLoader.h"
 #include "os.h"
 
 namespace Pirate

@@ -219,14 +219,6 @@
 			Name="render"
 			>
 			<File
-				RelativePath=".\BspLoader.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\BspLoader.h"
-				>
-			</File>
-			<File
 				RelativePath=".\D3D9Driver.h"
 				>
 			</File>
@@ -355,6 +347,14 @@
 			Name="scene"
 			>
 			<File
+				RelativePath=".\BSPFileLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\BSPFileLoader.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CameraFPSSceneNode.cpp"
 				>
 			</File>
@@ -376,6 +376,18 @@
 			</File>
 			<File
 				RelativePath=".\EmptySceneNode.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MDLFileLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MDLFileLoader.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MDLHelper.h"
 				>
 			</File>
 			<File
