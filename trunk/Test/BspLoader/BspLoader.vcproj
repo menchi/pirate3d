@@ -197,6 +197,14 @@
 				RelativePath=".\math_base.h"
 				>
 			</File>
+			<File
+				RelativePath=".\optimize.h"
+				>
+			</File>
+			<File
+				RelativePath=".\studio.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

@@ -1,5 +1,5 @@
-#ifndef _PIRATE_BSP_FILE_LOADER_
-#define _PIRATE_BSP_FILE_LOADER_
+#ifndef _PIRATE_BSP_FILE_LOADER_H_
+#define _PIRATE_BSP_FILE_LOADER_H_
 
 #include "RefObject.h"
 

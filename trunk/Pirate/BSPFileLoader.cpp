@@ -2,7 +2,7 @@
 #include "SMesh.h"
 #include "FileSystem.h"
 #include "OS.h"
-#include "BspLoader.h"
+#include "BSPFileLoader.h"
 
 namespace Pirate
 {

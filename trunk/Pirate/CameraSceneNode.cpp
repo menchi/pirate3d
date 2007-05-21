@@ -23,10 +23,10 @@ CameraSceneNode::CameraSceneNode(SceneNode* parent, SceneManager* mgr, s32 id,
 
 	// set default projection
 
-	m_fFovy = Pirate::PI / 2.0f;	// Field of view, in radians. 
+	m_fFovy = Pirate::PI / 4.0f;	// Field of view, in radians. 
 	m_fAspect = 1.0f / 1.0f;	// Aspect ratio. 
 	m_fZNear = 1.0f;		// value of the near view-plane. 
-	m_fZFar = 10000.0f;		// Z-value of the far view-plane. 
+	m_fZFar = 5000.0f;		// Z-value of the far view-plane. 
 
 	D3D9Driver* d = mgr->GetVideoDriver();
 	if (d)
