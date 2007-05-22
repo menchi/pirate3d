@@ -355,6 +355,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\BSPHelper.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CameraFPSSceneNode.cpp"
 				>
 			</File>

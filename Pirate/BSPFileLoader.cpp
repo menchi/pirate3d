@@ -2,6 +2,7 @@
 #include "SMesh.h"
 #include "FileSystem.h"
 #include "OS.h"
+#include "BSPHelper.h"
 #include "BSPFileLoader.h"
 
 namespace Pirate
@@ -30,7 +31,7 @@ struct BSP_VT
 
 //! Constructor
 BspFileLoader::BspFileLoader(FileSystem* fs, D3D9Driver* driver)
-: m_pFileSystem(fs), m_pDriver(driver)
+: m_pFileSystem(fs), m_pDriver(driver), m_pEntities(0)
 {
 	if (m_pFileSystem)
 		m_pFileSystem->Grab();
@@ -49,6 +50,9 @@ BspFileLoader::~BspFileLoader()
 
 	if (m_pDriver)
 		m_pDriver->Drop();
+
+	if (m_pEntities)
+		free(m_pEntities);
 }
 
 //! returns true if the file maybe is able to be loaded by this class
@@ -120,6 +124,20 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	file->Seek((header.lumps[LUMP_TEXDATA_STRING_TABLE]).fileofs);
 	pTexStringTable = (s32*)malloc(header.lumps[LUMP_TEXDATA_STRING_TABLE].filelen);
 	file->Read(pTexStringTable, header.lumps[LUMP_TEXDATA_STRING_TABLE].filelen);
+
+	file->Seek((header.lumps[LUMP_ENTITIES]).fileofs);
+	m_pEntities = (char*)malloc(header.lumps[LUMP_ENTITIES].filelen);
+	file->Read(m_pEntities, header.lumps[LUMP_ENTITIES].filelen);
+
+	stringc entString = m_pEntities;
+	s32 seeker = 0;
+	while (seeker < header.lumps[LUMP_ENTITIES].filelen)
+	{
+		s32 endLine = entString.findNext('\n', seeker);
+		stringc line = entString.subString(seeker, endLine);
+		Printer::Log(line.c_str());
+		seeker += (endLine+1);
+	}
 
 	s32 vertexCount = header.lumps[LUMP_VERTEXES].filelen / sizeof(dvertex_t);
 	s32 faceCount = header.lumps[LUMP_FACES].filelen / sizeof(dface_t);

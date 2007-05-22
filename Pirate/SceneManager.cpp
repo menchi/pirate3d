@@ -6,6 +6,7 @@
 #include "MeshCache.h"
 #include "SMesh.h"
 #include "BSPFileLoader.h"
+#include "MDLFileLoader.h"
 #include "os.h"
 
 namespace Pirate
@@ -94,6 +95,18 @@ SMesh* SceneManager::GetMesh(const c8* filename)
 	{
 		file->Seek(0);
 		msh = bspLoader.CreateMesh(file);
+		if (msh)
+		{
+			m_pMeshCache->AddMesh(filename, msh);
+			msh->Drop();
+		}
+	}
+
+	MDLFileLoader mdlLoader(m_pFileSystem, m_pDriver);
+	if (mdlLoader.IsALoadableFileExtension(name.c_str()))
+	{
+		file->Seek(0);
+		msh = mdlLoader.CreateMesh(file);
 		if (msh)
 		{
 			m_pMeshCache->AddMesh(filename, msh);
@@ -602,6 +615,63 @@ SceneManager* SceneManager::CreateNewSceneManager()
 SceneManager* CreateSceneManager(D3D9Driver* driver, FileSystem* fs, DeviceWin32::CursorControl* cursorcontrol )
 {
 	return new SceneManager(driver, fs, 0);
+}
+
+//! Loads a scene. Note that the current scene is not cleared before.
+//! \param filename: Name of the file .
+BOOL SceneManager::LoadScene(const c8* filename)
+{
+	SMesh* msh = 0;
+
+	stringc name = filename;
+	name.make_lower();
+
+	msh = m_pMeshCache->FindMesh(name.c_str());
+	if (msh)
+		return TRUE;
+
+	FileReader* file = m_pFileSystem->CreateAndOpenFile(filename);
+	if (!file)
+	{
+		Printer::Log("Could not load mesh, because file could not be opened.", filename, ELL_ERROR);
+		return 0;
+	}
+
+	BspFileLoader bspLoader(m_pFileSystem, m_pDriver);
+	if (bspLoader.IsALoadableFileExtension(name.c_str()))
+	{
+		file->Seek(0);
+		msh = bspLoader.CreateMesh(file);
+		if (msh)
+		{
+			m_pMeshCache->AddMesh(filename, msh);
+			msh->Drop();
+		}
+	}
+
+	file->Drop();
+
+	if (!msh)
+		Printer::Log("Could not load mesh, file format seems to be unsupported", filename, ELL_ERROR);
+	else
+		Printer::Log("Loaded mesh", filename, ELL_INFORMATION);
+/*
+	MDLFileLoader mdlLoader(m_pFileSystem, m_pDriver);
+	if (mdlLoader.IsALoadableFileExtension(name.c_str()))
+	{
+		file->Seek(0);
+		msh = mdlLoader.CreateMesh(file);
+		if (msh)
+		{
+			m_pMeshCache->AddMesh(filename, msh);
+			msh->Drop();
+		}
+	}
+*/
+
+
+
+	return TRUE;
 }
 
 } // end namespace
