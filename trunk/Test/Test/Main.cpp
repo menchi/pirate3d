@@ -2,10 +2,10 @@
 
 using namespace Pirate;
 
-class SetSimpleWhiteShaderConstant : public IShaderConstantSetCallBack
+class ShaderConstantSetter : public IShaderConstantSetCallBack
 {
 public:
-	SetSimpleWhiteShaderConstant(CameraSceneNode* pCamera, MeshSceneNode* pMeshNode) 
+	ShaderConstantSetter(CameraSceneNode* pCamera, MeshSceneNode* pMeshNode) 
 	: m_pCamera(pCamera), m_pMeshNode(pMeshNode)
 	{
 		if (m_pCamera)
@@ -13,7 +13,7 @@ public:
 		if (m_pMeshNode)
 			m_pMeshNode->Grab();
 	}
-	~SetSimpleWhiteShaderConstant()
+	~ShaderConstantSetter()
 	{
 		if (m_pCamera)
 			m_pCamera->Drop();
@@ -48,10 +48,9 @@ void main()
 	MeshSceneNode* pMeshNode = pSceneManager->AddMeshSceneNode(pMesh);
 	pMeshNode->SetRotation(vector3df(-90.f, 0.f, 0.f));
 
-	SetSimpleWhiteShaderConstant* setter = new SetSimpleWhiteShaderConstant(pSceneManager->GetActiveCamera(), pMeshNode);
+	ShaderConstantSetter* setter = new ShaderConstantSetter(pSceneManager->GetActiveCamera(), pMeshNode);
 	s32 newM = pDriver->AddHighLevelShaderMaterialFromFiles("..\\..\\Media\\GenericLightmap.hlsl", "vertexMain", 
 		"..\\..\\Media\\GenericLightmap.hlsl", "pixelMain", setter);
-	setter->Drop();
 
 	for (u32 i=0; i<pMesh->GetMeshBufferCount(); i++)
 	{
@@ -60,6 +59,22 @@ void main()
 		pMesh->GetMeshBuffer(i)->m_Material.Filter = D3DTEXF_LINEAR;
 	}
 	pMeshNode->SetReadOnlyMaterials(TRUE);
+
+	SMesh* pMDLMesh = pSceneManager->GetMesh("../../Media/oildrum001.mdl");
+	MeshSceneNode* pMDLMeshNode = pSceneManager->AddMeshSceneNode(pMDLMesh);
+//	pMDLMeshNode->SetRotation(vector3df(-90.f, 0.f, 0.f));
+
+	newM = pDriver->AddHighLevelShaderMaterialFromFiles("..\\..\\Media\\BaseTexture.hlsl", "vertexMain", 
+		"..\\..\\Media\\BaseTexture.hlsl", "pixelMain", setter);
+	setter->Drop();
+
+	for (u32 i=0; i<pMDLMesh->GetMeshBufferCount(); i++)
+	{
+		pMDLMesh->GetMeshBuffer(i)->m_Material.ShaderType = newM;
+		pMDLMesh->GetMeshBuffer(i)->m_Material.BackfaceCulling = D3DCULL_CW;
+//		pMDLMesh->GetMeshBuffer(i)->m_Material.Filter = D3DTEXF_LINEAR;
+	}
+	pMDLMeshNode->SetReadOnlyMaterials(TRUE);
 
 	int lastFPS = -1;
 

@@ -79,20 +79,20 @@ public:
 	SceneManager(D3D9Driver* driver, FileSystem* fs, MeshCache* cache = 0 );
 
 	//! destructor
-	virtual ~SceneManager();
+	~SceneManager();
 
 	//! gets an animateable mesh. loads it if needed. returned pointer must not be dropped.
-	virtual SMesh* GetMesh(const c8* filename);
+	SMesh* GetMesh(const c8* filename);
 
 	//! Returns an interface to the mesh cache which is shared beween all existing scene managers.
-	virtual MeshCache* GetMeshCache();
+	MeshCache* GetMeshCache();
 
 	//! returns the video driver
-	virtual D3D9Driver* GetVideoDriver();
+	D3D9Driver* GetVideoDriver();
 
 	//! adds a scene node for rendering a static mesh
 	//! the returned pointer must not be dropped.
-	virtual MeshSceneNode* AddMeshSceneNode(SMesh* mesh, SceneNode* parent=0, s32 id=-1,
+	MeshSceneNode* AddMeshSceneNode(SMesh* mesh, SceneNode* parent=0, s32 id=-1,
 		const vector3df& position = vector3df(0,0,0), 
 		const vector3df& rotation = vector3df(0,0,0),
 		const vector3df& scale = vector3df(1.0f, 1.0f, 1.0f),
@@ -105,10 +105,10 @@ public:
 	virtual const aabbox3d<f32>& GetBoundingBox() const;
 
 	//! registers a node for rendering it at a specific time.
-	virtual u32 RegisterNodeForRendering(SceneNode* node, E_SCENE_NODE_RENDER_PASS = ESNRP_AUTOMATIC);
+	u32 RegisterNodeForRendering(SceneNode* node, E_SCENE_NODE_RENDER_PASS = ESNRP_AUTOMATIC);
 
 	//! draws all scene nodes
-	virtual void DrawAll();
+	void DrawAll();
 
 	//! Adds a camera scene node to the tree and sets it as active camera.
 	//! \param position: Position of the space relative to its parent where the camera will be placed.
@@ -116,58 +116,62 @@ public:
 	//! \param parent: Parent scene node of the camera. Can be null. If the parent moves,
 	//! the camera will move too.
 	//! \return Returns pointer to interface to camera
-	virtual CameraSceneNode* AddCameraSceneNode(SceneNode* parent = 0,
+	CameraSceneNode* AddCameraSceneNode(SceneNode* parent = 0,
 		const vector3df& position = vector3df(0,0,0), 
 		const vector3df& lookat = vector3df(0,0,100), s32 id=-1);
 
 	//! Adds a camera scene node which is able to be controled with the mouse and keys
 	//! like in most first person shooters (FPS):
-	virtual CameraSceneNode* AddCameraSceneNodeFPS( DeviceWin32::CursorControl* cursorControl, 
+	CameraSceneNode* AddCameraSceneNodeFPS( DeviceWin32::CursorControl* cursorControl, 
 		SceneNode* parent = 0,
 		f32 rotateSpeed = 1500.0f, f32 moveSpeed = 200.0f, s32 id=-1,
 		SKeyMap* keyMapArray=0, s32 keyMapSize=0, BOOL noVerticalMovement=FALSE,
 		f32 jumpSpeed = 0.f);
 
 	//! Adds an empty scene node.
-	virtual SceneNode* AddEmptySceneNode(SceneNode* parent=0, s32 id=-1);
+	SceneNode* AddEmptySceneNode(SceneNode* parent=0, s32 id=-1);
 
 	//! Returns the root scene node. This is the scene node wich is parent 
 	//! of all scene nodes. The root scene node is a special scene node which
 	//! only exists to manage all scene nodes. It is not rendered and cannot
 	//! be removed from the scene.
 	//! \return Returns a pointer to the root scene node.
-	virtual SceneNode* GetRootSceneNode();
+	SceneNode* GetRootSceneNode();
 
 	//! Returns the current active camera.
 	//! \return The active camera is returned. Note that this can be NULL, if there
 	//! was no camera created yet.
-	virtual CameraSceneNode* GetActiveCamera();
+	CameraSceneNode* GetActiveCamera();
 
 	//! Sets the active camera. The previous active camera will be deactivated.
 	//! \param camera: The new camera which should be active.
-	virtual void SetActiveCamera(CameraSceneNode* camera);
+	void SetActiveCamera(CameraSceneNode* camera);
 
 	//! Returns the first scene node with the specified id.
-	virtual SceneNode* GetSceneNodeFromId(s32 id, SceneNode* start=0);
+	SceneNode* GetSceneNodeFromId(s32 id, SceneNode* start=0);
 
 	//! Returns the first scene node with the specified name.
-	virtual SceneNode* GetSceneNodeFromName(const c8* name, SceneNode* start=0);
+	SceneNode* GetSceneNodeFromName(const c8* name, SceneNode* start=0);
 
 	//! Posts an input event to the environment. Usually you do not have to
 	//! use this method, it is used by the internal engine.
-	virtual BOOL PostEventFromUser(SEvent event);
+	BOOL PostEventFromUser(SEvent event);
 
 	//! Clears the whole scene. All scene nodes are removed. 
-	virtual void Clear();
+	void Clear();
 
 	//! Removes all children of this scene node
 	virtual void RemoveAll();
 
 	//! Returns current render pass. 
-	virtual E_SCENE_NODE_RENDER_PASS GetSceneNodeRenderPass();
+	E_SCENE_NODE_RENDER_PASS GetSceneNodeRenderPass();
 
 	//! Creates a new scene manager. 
-	virtual SceneManager* CreateNewSceneManager();
+	SceneManager* CreateNewSceneManager();
+
+	//! Loads a scene. Note that the current scene is not cleared before.
+	//! \param filename: Name of the file .
+	BOOL LoadScene(const c8* filename);
 
 private:
 
