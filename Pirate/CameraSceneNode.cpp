@@ -64,7 +64,7 @@ BOOL CameraSceneNode::IsInputReceiverEnabled()
 //! \param projection: The new projection matrix of the camera. 
 void CameraSceneNode::SetProjectionMatrix(const matrix4& projection)
 {
-	m_ViewArea.Matrices [ SViewFrustum::ETS_PROJECTION ] = projection;
+	m_ViewArea.Matrices [ ETS_PROJECTION ] = projection;
 }
 
 
@@ -73,7 +73,7 @@ void CameraSceneNode::SetProjectionMatrix(const matrix4& projection)
 //! \return Returns the current projection matrix of the camera.
 const matrix4& CameraSceneNode::GetProjectionMatrix()
 {
-	return m_ViewArea.Matrices [ SViewFrustum::ETS_PROJECTION ];
+	return m_ViewArea.Matrices [ ETS_PROJECTION ];
 }
 
 
@@ -82,7 +82,7 @@ const matrix4& CameraSceneNode::GetProjectionMatrix()
 //! \return Returns the current view matrix of the camera.
 const matrix4& CameraSceneNode::GetViewMatrix()
 {
-	return m_ViewArea.Matrices [ SViewFrustum::ETS_VIEW ];
+	return m_ViewArea.Matrices [ ETS_VIEW ];
 }
 
 
@@ -180,7 +180,7 @@ void CameraSceneNode::SetFOV(f32 f)
 
 void CameraSceneNode::RecalculateProjectionMatrix()
 {
-	m_ViewArea.Matrices[ SViewFrustum::ETS_PROJECTION ].buildProjectionMatrixPerspectiveFovLH(m_fFovy, m_fAspect, m_fZNear, m_fZFar);
+	m_ViewArea.Matrices[ ETS_PROJECTION ].buildProjectionMatrixPerspectiveFovLH(m_fFovy, m_fAspect, m_fZNear, m_fZFar);
 }
 
 
@@ -204,7 +204,8 @@ void CameraSceneNode::OnRegisterSceneNode()
 		up.X += 0.5f;
 	}
 
-	m_ViewArea.Matrices [ SViewFrustum::ETS_VIEW ].buildCameraLookAtMatrixLH(pos, m_Target, up);
+	m_ViewArea.Matrices [ ETS_VIEW ].buildCameraLookAtMatrixLH(pos, m_Target, up);
+	m_ViewArea.SetTransformState ( ETS_VIEW );
 	RecalculateViewArea();
 
 	if ( m_pSceneManager->GetActiveCamera () == this )
@@ -219,6 +220,12 @@ void CameraSceneNode::OnRegisterSceneNode()
 //! render
 void CameraSceneNode::Render()
 {	
+	D3D9Driver* driver = m_pSceneManager->GetVideoDriver();
+	if ( driver)
+	{
+		driver->SetTransform(ETS_PROJECTION, m_ViewArea.Matrices[ ETS_PROJECTION ] );
+		driver->SetTransform(ETS_VIEW, m_ViewArea.Matrices[ ETS_VIEW ] );
+	}
 }
 
 
@@ -244,9 +251,7 @@ vector3df CameraSceneNode::GetAbsolutePosition() const
 void CameraSceneNode::RecalculateViewArea()
 {
 	m_ViewArea.m_CameraPosition = GetAbsolutePosition();
-	matrix4 VIEW_PROJECTION;
-	VIEW_PROJECTION.setbyproduct_nocheck (m_ViewArea.Matrices[ SViewFrustum::ETS_PROJECTION], m_ViewArea.Matrices[ SViewFrustum::ETS_VIEW] );
-	m_ViewArea.SetFrom ( VIEW_PROJECTION );
+	m_ViewArea.SetFrom ( m_ViewArea.Matrices [ SViewFrustum::ETS_VIEW_PROJECTION_3 ] );
 }
 
 

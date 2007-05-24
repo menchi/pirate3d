@@ -2,32 +2,7 @@
 
 using namespace Pirate;
 
-class ShaderConstantSetter : public IShaderConstantSetCallBack
-{
-public:
-	ShaderConstantSetter(CameraSceneNode* pCamera, MeshSceneNode* pMeshNode) 
-	: m_pCamera(pCamera), m_pMeshNode(pMeshNode)
-	{
-		if (m_pCamera)
-			m_pCamera->Grab();
-		if (m_pMeshNode)
-			m_pMeshNode->Grab();
-	}
-	~ShaderConstantSetter()
-	{
-		if (m_pCamera)
-			m_pCamera->Drop();
-		if (m_pMeshNode)
-			m_pMeshNode->Drop();
-	}
-	virtual void OnSetConstants(D3D9Driver* services, s32 userData)
-	{
-		matrix4 ViewProjectionMatrix = m_pCamera->GetProjectionMatrix()*m_pCamera->GetViewMatrix()*m_pMeshNode->GetAbsoluteTransformation();
-		services->SetVertexShaderConstant("mWorldViewProj", ViewProjectionMatrix.pointer(), 16);
-	}
-	CameraSceneNode* m_pCamera;
-	MeshSceneNode* m_pMeshNode;
-};
+
 
 void main()
 {
@@ -42,39 +17,8 @@ void main()
 	IDirect3DDevice9* pD3DDevice = pDriver->GetExposedVideoData().D3DDev9;
 
 	SceneManager* pSceneManager = pDevice->GetSceneManager();
-	CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNodeFPS(pDevice->GetWin32CursorControl());
-	//CameraSceneNode* pCamera = pSceneManager->AddCameraSceneNode();
-	SMesh* pMesh = pSceneManager->GetMesh("../../Media/firstmap.bsp");
-	MeshSceneNode* pMeshNode = pSceneManager->AddMeshSceneNode(pMesh);
-	pMeshNode->SetRotation(vector3df(-90.f, 0.f, 0.f));
 
-	ShaderConstantSetter* setter = new ShaderConstantSetter(pSceneManager->GetActiveCamera(), pMeshNode);
-	s32 newM = pDriver->AddHighLevelShaderMaterialFromFiles("..\\..\\Media\\GenericLightmap.hlsl", "vertexMain", 
-		"..\\..\\Media\\GenericLightmap.hlsl", "pixelMain", setter);
-
-	for (u32 i=0; i<pMesh->GetMeshBufferCount(); i++)
-	{
-		pMesh->GetMeshBuffer(i)->m_Material.ShaderType = newM;
-		pMesh->GetMeshBuffer(i)->m_Material.BackfaceCulling = D3DCULL_CW;
-		pMesh->GetMeshBuffer(i)->m_Material.Filter = D3DTEXF_LINEAR;
-	}
-	pMeshNode->SetReadOnlyMaterials(TRUE);
-
-	SMesh* pMDLMesh = pSceneManager->GetMesh("../../Media/oildrum001.mdl");
-	MeshSceneNode* pMDLMeshNode = pSceneManager->AddMeshSceneNode(pMDLMesh);
-//	pMDLMeshNode->SetRotation(vector3df(-90.f, 0.f, 0.f));
-
-	newM = pDriver->AddHighLevelShaderMaterialFromFiles("..\\..\\Media\\BaseTexture.hlsl", "vertexMain", 
-		"..\\..\\Media\\BaseTexture.hlsl", "pixelMain", setter);
-	setter->Drop();
-
-	for (u32 i=0; i<pMDLMesh->GetMeshBufferCount(); i++)
-	{
-		pMDLMesh->GetMeshBuffer(i)->m_Material.ShaderType = newM;
-		pMDLMesh->GetMeshBuffer(i)->m_Material.BackfaceCulling = D3DCULL_CW;
-//		pMDLMesh->GetMeshBuffer(i)->m_Material.Filter = D3DTEXF_LINEAR;
-	}
-	pMDLMeshNode->SetReadOnlyMaterials(TRUE);
+	pSceneManager->LoadScene("../../Media/FirstMap.bsp");
 
 	int lastFPS = -1;
 

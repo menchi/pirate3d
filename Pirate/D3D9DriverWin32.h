@@ -1,6 +1,7 @@
 #ifndef _PIRATE_D3D9DRIVER_WIN32_H_
 #define _PIRATE_D3D9DRIVER_WIN32_H_
 
+#include "matrix4.h"
 #include "D3D9Texture.h"
 #include "SMaterial.h"
 #include "pirateArray.h"
@@ -76,6 +77,27 @@ enum E_VIDEO_DRIVER_FEATURE
 
 	//! Are framebuffer objects supported?
 	EVDF_FRAMEBUFFER_OBJECT
+};
+
+//! enumeration for geometry transformation states
+enum E_TRANSFORMATION_STATE
+{
+	//! View transformation
+	ETS_VIEW = 0,
+	//! World transformation
+	ETS_WORLD,
+	//! Projection transformation
+	ETS_PROJECTION,
+	//! Texture transformation
+	ETS_TEXTURE_0,
+	//! Texture transformation
+	ETS_TEXTURE_1,
+	//! Texture transformation
+	ETS_TEXTURE_2,
+	//! Texture transformation
+	ETS_TEXTURE_3,
+	//! Not used
+	ETS_COUNT
 };
 
 struct SExposedVideoData
@@ -180,6 +202,12 @@ public:
 
 	//! queries the features of the driver, returns true if feature is available
 	BOOL QueryFeature(E_VIDEO_DRIVER_FEATURE feature);
+
+	//! sets transformation
+	void SetTransform(E_TRANSFORMATION_STATE state, const matrix4& mat);
+
+	//! Returns the transformation set by setTransform
+	const matrix4& GetTransform(E_TRANSFORMATION_STATE state);
 
 	//! loads a Texture
 	D3D9Texture* GetTexture(const c8* filename);
@@ -355,6 +383,7 @@ private:
 
 	IDirect3DVertexDeclaration9* m_pLastVertexType;
 	SMaterial m_Material, m_LastMaterial;
+	matrix4 m_Matrices[ETS_COUNT];
 
 	D3DPRESENT_PARAMETERS m_Present;
 	D3DCAPS9 m_Caps;

@@ -532,6 +532,20 @@ BOOL D3D9Driver::QueryFeature(E_VIDEO_DRIVER_FEATURE feature)
 	};
 }
 
+//! sets transformation
+void D3D9Driver::SetTransform(E_TRANSFORMATION_STATE state, const matrix4& mat)
+{
+//	Transformation3DChanged = true;
+
+	m_Matrices[state] = mat;
+}
+
+//! Returns the transformation set by setTransform
+const matrix4& D3D9Driver::GetTransform(E_TRANSFORMATION_STATE state)
+{
+	return m_Matrices[state];
+}
+
 //! Removes a texture from the texture cache and deletes it, freeing lot of
 //! memory.
 void D3D9Driver::RemoveTexture(D3D9Texture* texture)

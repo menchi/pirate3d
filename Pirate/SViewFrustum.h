@@ -3,6 +3,7 @@
 
 #include "aabbox3d.h"
 #include "matrix4.h"
+#include "D3D9Driver.h"
 
 namespace Pirate
 {
@@ -81,17 +82,16 @@ struct SViewFrustum
 	aabbox3d<f32> m_BoundingBox;
 
 	//! Hold a copy of important transform matrices
-	enum E_TRANSFORMATION_STATE
+	enum E_TRANSFORMATION_STATE_3
 	{
-		//! View transformation
-		ETS_VIEW = 0,
-		//! Projection transformation
-		ETS_PROJECTION,
-
-		ETS_COUNT
+		ETS_VIEW_PROJECTION_3 = ETS_PROJECTION + 1,
+		ETS_VIEW_MODEL_INVERSE_3,
+		ETS_CURRENT_3,
+		ETS_COUNT_3
 	};
 
-	matrix4 Matrices[ETS_COUNT];
+	matrix4 Matrices[ETS_COUNT_3];
+	void SetTransformState( E_TRANSFORMATION_STATE state);
 };
 
 
@@ -234,6 +234,26 @@ inline void SViewFrustum::SetFrom(const matrix4& mat)
 	RecalculateBoundingBox();
 }
 
+inline void SViewFrustum::SetTransformState( E_TRANSFORMATION_STATE state)
+{
+	switch ( state )
+	{
+	case ETS_VIEW:
+		Matrices[ETS_VIEW_PROJECTION_3].setbyproduct_nocheck (	Matrices[ ETS_PROJECTION],
+			Matrices[ ETS_VIEW]
+		);
+		Matrices[ETS_VIEW_MODEL_INVERSE_3] = Matrices[ ETS_VIEW];
+		Matrices[ETS_VIEW_MODEL_INVERSE_3].makeInverse();
+		break;
+
+	case ETS_WORLD:
+		Matrices[ETS_CURRENT_3].setbyproduct (  Matrices[ ETS_VIEW_PROJECTION_3 ],
+			Matrices[ ETS_WORLD]	);
+		break;
+	default:
+		break;
+	}
+}
 
 } // end namespace
 

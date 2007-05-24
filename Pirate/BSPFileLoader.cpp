@@ -31,7 +31,7 @@ struct BSP_VT
 
 //! Constructor
 BspFileLoader::BspFileLoader(FileSystem* fs, D3D9Driver* driver)
-: m_pFileSystem(fs), m_pDriver(driver), m_pEntities(0)
+: m_pFileSystem(fs), m_pDriver(driver)
 {
 	if (m_pFileSystem)
 		m_pFileSystem->Grab();
@@ -50,9 +50,6 @@ BspFileLoader::~BspFileLoader()
 
 	if (m_pDriver)
 		m_pDriver->Drop();
-
-	if (m_pEntities)
-		free(m_pEntities);
 }
 
 //! returns true if the file maybe is able to be loaded by this class
@@ -126,17 +123,50 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	file->Read(pTexStringTable, header.lumps[LUMP_TEXDATA_STRING_TABLE].filelen);
 
 	file->Seek((header.lumps[LUMP_ENTITIES]).fileofs);
-	m_pEntities = (char*)malloc(header.lumps[LUMP_ENTITIES].filelen);
-	file->Read(m_pEntities, header.lumps[LUMP_ENTITIES].filelen);
+	char* pEntities = (char*)malloc(header.lumps[LUMP_ENTITIES].filelen);
+	file->Read(pEntities, header.lumps[LUMP_ENTITIES].filelen);
 
-	stringc entString = m_pEntities;
-	s32 seeker = 0;
-	while (seeker < header.lumps[LUMP_ENTITIES].filelen)
+	file->Seek((header.lumps[LUMP_GAME_LUMP]).fileofs);
+	dgamelumpheader_t* pGameLumpHdr = (dgamelumpheader_t*)malloc(header.lumps[LUMP_GAME_LUMP].filelen);
+	file->Read(pGameLumpHdr, header.lumps[LUMP_GAME_LUMP].filelen);
+
+	dgamelump_t* pGameLumps = (dgamelump_t*)(pGameLumpHdr + 1);
+
+	for (int i=0; i<pGameLumpHdr->lumpCount; i++)
 	{
-		s32 endLine = entString.findNext('\n', seeker);
-		stringc line = entString.subString(seeker, endLine);
-		Printer::Log(line.c_str());
-		seeker += (endLine+1);
+		if (pGameLumps[i].id == 'sprp')
+		{
+			int* dictEntries = (int*)((c8*)pGameLumpHdr + (pGameLumps[i].fileofs - header.lumps[LUMP_GAME_LUMP].fileofs));
+			StaticPropDictLump_t* pStaticPropDict = (StaticPropDictLump_t*)(dictEntries + 1);
+			int* leafEntries = (int*)(pStaticPropDict + *dictEntries);
+			StaticPropLeafLump_t* pStaticPropLeaf = (StaticPropLeafLump_t*)(leafEntries + 1);
+			int* lumpEntries = (int*)(pStaticPropLeaf + *leafEntries);
+			StaticPropLump_t* pStaticPropLumps = (StaticPropLump_t*)(lumpEntries + 1);
+			for (int j=0; j<*lumpEntries; j++)
+			{
+				EntityInfo eInfo;
+				eInfo.ModelName = pStaticPropDict[pStaticPropLumps->m_PropType].m_Name;
+				eInfo.Origin = vector3df(pStaticPropLumps->m_Origin._v[0], pStaticPropLumps->m_Origin._v[1], pStaticPropLumps->m_Origin._v[2]);
+				eInfo.Angles = vector3df(pStaticPropLumps->m_Angles.z, pStaticPropLumps->m_Angles.x, pStaticPropLumps->m_Angles.y);
+				m_Entities.push_back(eInfo);
+				pStaticPropLumps++;
+			}
+		}
+	}
+
+	stringc entString = pEntities;
+	s32 seeker = 0;
+	s32 start = entString.findNext('{', seeker);
+	while (start != -1)
+	{
+		s32 end = entString.findNext('}', start + 1);
+		seeker = end + 1;
+		stringc entity = entString.subString(start, end - start + 1);
+
+		if (!ParseModels(entity)) 
+			ParsePlayerStartInfo(entity);
+
+		start = entString.findNext('{', seeker);
 	}
 
 	s32 vertexCount = header.lumps[LUMP_VERTEXES].filelen / sizeof(dvertex_t);
@@ -290,8 +320,166 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	free(pLightmaps);
 	free(pTexStringData);
 	free(pTexStringTable);
+	free(pGameLumpHdr);
+	free(pEntities);
 
 	return pMesh;
+}
+
+const s32 BspFileLoader::GetEntityCount() const
+{
+	return m_Entities.size();
+}
+
+const BspFileLoader::EntityInfo& BspFileLoader::GetEntity(s32 i) const
+{
+	return m_Entities[i];
+}
+
+BOOL BspFileLoader::ParseModels(const stringc& entity)
+{
+	s32 start  = entity.find("model");
+
+	if (start == -1)
+		return FALSE;
+
+	start = entity.findNext('"', start + 6);
+	s32 end = entity.findNext('"', start + 1);
+	EntityInfo eInfo;
+	eInfo.ModelName = entity.subString(start, end - start);
+
+	if (eInfo.ModelName[0] == '*')
+		return FALSE;
+
+	char tmpString[32];
+	float tmpVector[3];
+	int i = 0;
+
+	start = entity.find("origin");
+	start = entity.findNext('"', start + 7) + 1;
+
+	while (entity[start] != '"')
+	{
+		if (entity[start] != ' ')
+		{
+			end = start;
+			while (entity[end] != ' ')
+			{
+				tmpString[end-start] = entity[end];
+				end++;
+			}
+			tmpString[end-start] = 0;
+			tmpVector[i++] = (float)atof(tmpString);
+			if (i == 3)
+				break;
+		}
+		start = end + 1;
+	}
+
+	eInfo.Origin.X = tmpVector[0];
+	eInfo.Origin.Y = tmpVector[1];
+	eInfo.Origin.Z = tmpVector[2];
+
+	i = 0;
+	start = entity.find("angles");
+	start = entity.findNext('"', start + 7) + 1;
+
+	while (entity[start] != '"')
+	{
+		if (entity[start] != ' ')
+		{
+			end = start;
+			while (entity[end] != ' ')
+			{
+				tmpString[end-start] = entity[end];
+				end++;
+			}
+			tmpString[end-start] = 0;
+			tmpVector[i++] = (float)atof(tmpString);
+			if (i == 3)
+				break;
+		}
+		start++;
+	}
+
+	eInfo.Angles.X = tmpVector[0];
+	eInfo.Angles.Y = tmpVector[1];
+	eInfo.Angles.Z = tmpVector[2];
+
+	m_Entities.push_back(eInfo);
+
+	return TRUE;
+}
+
+BOOL BspFileLoader::ParsePlayerStartInfo(const stringc& entity)
+{
+	s32 start  = entity.find("info_player_start");
+	s32 end = start;
+
+	if (start == -1)
+		return FALSE;
+
+	EntityInfo eInfo;
+	eInfo.ModelName = "info_player_start";
+
+	char tmpString[32];
+	float tmpVector[3];
+	int i = 0;
+
+	start = entity.find("origin");
+	start = entity.findNext('"', start + 7) + 1;
+
+	while (entity[start] != '"')
+	{
+		if (entity[start] != ' ')
+		{
+			end = start;
+			while (entity[end] != ' ')
+			{
+				tmpString[end-start] = entity[end];
+				end++;
+			}
+			tmpString[end-start] = 0;
+			tmpVector[i++] = (float)atof(tmpString);
+			if (i == 3)
+				break;
+		}
+		start = end + 1;
+	}
+
+	eInfo.Origin.X = tmpVector[0];
+	eInfo.Origin.Y = tmpVector[1];
+	eInfo.Origin.Z = tmpVector[2];
+
+	i = 0;
+	start = entity.find("angles");
+	start = entity.findNext('"', start + 7) + 1;
+
+	while (entity[start] != '"')
+	{
+		if (entity[start] != ' ')
+		{
+			end = start;
+			while (entity[end] != ' ')
+			{
+				tmpString[end-start] = entity[end];
+				end++;
+			}
+			tmpString[end-start] = 0;
+			tmpVector[i++] = (float)atof(tmpString);
+			if (i == 3)
+				break;
+		}
+		start++;
+	}
+
+	eInfo.Angles.X = tmpVector[0];
+	eInfo.Angles.Y = tmpVector[1];
+	eInfo.Angles.Z = tmpVector[2];
+
+	m_Entities.push_back(eInfo);
+
+	return TRUE;
 }
 
 }

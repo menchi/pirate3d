@@ -1339,6 +1339,101 @@ struct vertexFileHeader_t
 	int		tangentDataStart;				// offset from base to tangent block
 };
 
+// apply sequentially to lod sorted vertex and tangent pools to re-establish mesh order
+struct vertexFileFixup_t
+{
+	int		lod;				// used to skip culled root lod
+	int		sourceVertexID;		// absolute index from start of vertex/tangent blocks
+	int		numVertexes;
+};
+
+// Load the minimum qunatity of verts and run fixups
+inline int Studio_LoadVertexes( const vertexFileHeader_t *pTempVvdHdr, vertexFileHeader_t *pNewVvdHdr, int rootLOD, bool bNeedsTangentS )
+{
+	int					i;
+	int					target;
+	int					numVertexes;
+	vertexFileFixup_t	*pFixupTable;
+
+	numVertexes = pTempVvdHdr->numLODVertexes[rootLOD];
+
+	// copy all data up to start of vertexes
+	memcpy((void*)pNewVvdHdr, (void*)pTempVvdHdr, pTempVvdHdr->vertexDataStart);
+
+	for ( i = 0; i < rootLOD; i++)
+	{
+		pNewVvdHdr->numLODVertexes[i] = pNewVvdHdr->numLODVertexes[rootLOD];
+	}
+
+	// fixup data starts
+	if (bNeedsTangentS)
+	{
+		// tangent data follows possibly reduced vertex data
+		pNewVvdHdr->tangentDataStart = pNewVvdHdr->vertexDataStart + numVertexes*sizeof(mstudiovertex_t);
+	}
+	else
+	{
+		// no tangent data will be available, mark for identification
+		pNewVvdHdr->tangentDataStart = 0;
+	}
+
+	if (!pNewVvdHdr->numFixups)
+	{		
+		// fixups not required
+		// transfer vertex data
+		memcpy(
+			(byte *)pNewVvdHdr+pNewVvdHdr->vertexDataStart, 
+			(byte *)pTempVvdHdr+pTempVvdHdr->vertexDataStart,
+			numVertexes*sizeof(mstudiovertex_t) );
+
+		if (bNeedsTangentS)
+		{
+			// transfer tangent data to cache memory
+			memcpy(
+				(byte *)pNewVvdHdr+pNewVvdHdr->tangentDataStart, 
+				(byte *)pTempVvdHdr+pTempVvdHdr->tangentDataStart,
+				numVertexes*sizeof(Vector4D) );
+		}
+
+		return numVertexes;
+	}
+
+	// fixups required
+	// re-establish mesh ordered vertexes into cache memory, according to table
+	target      = 0;
+	pFixupTable = (vertexFileFixup_t *)((byte *)pTempVvdHdr + pTempVvdHdr->fixupTableStart);
+	for (i=0; i<pTempVvdHdr->numFixups; i++)
+	{
+		if (pFixupTable[i].lod < rootLOD)
+		{
+			// working bottom up, skip over copying higher detail lods
+			continue;
+		}
+
+		// copy vertexes
+		memcpy(
+			(mstudiovertex_t *)((byte *)pNewVvdHdr+pNewVvdHdr->vertexDataStart) + target,
+			(mstudiovertex_t *)((byte *)pTempVvdHdr+pTempVvdHdr->vertexDataStart) + pFixupTable[i].sourceVertexID,
+			pFixupTable[i].numVertexes*sizeof(mstudiovertex_t) );
+
+		if (bNeedsTangentS)
+		{
+			// copy tangents
+			memcpy(
+				(Vector4D *)((byte *)pNewVvdHdr+pNewVvdHdr->tangentDataStart) + target,
+				(Vector4D *)((byte *)pTempVvdHdr+pTempVvdHdr->tangentDataStart) + pFixupTable[i].sourceVertexID,
+				pFixupTable[i].numVertexes*sizeof(Vector4D) );
+		}
+
+		// data is placed consecutively
+		target += pFixupTable[i].numVertexes;
+	}
+
+	pNewVvdHdr->numFixups = 0;
+
+	return target;
+}
+
 static studiohdr_t *g_pActiveStudioHdr = NULL;
 
 #define MODEL_VERTEX_FILE_ID		(('V'<<24)+('S'<<16)+('D'<<8)+'I')
@@ -1404,10 +1499,15 @@ const mstudio_modelvertexdata_t *mstudiomodel_t::GetVertexData()
 		Printer::Log("Error Vertex File checksum", vvdName.c_str(), ELL_ERROR);
 	}
 
-	g_pActiveStudioHdr->pVertexBase = (void*)pVvdHdr; 
+	vertexFileHeader_t* pNewVvdHdr = (vertexFileHeader_t*)malloc(size);
+	Studio_LoadVertexes(pVvdHdr, pNewVvdHdr, 0, true);
 
-	vertexdata.pVertexData  = (byte *)pVvdHdr + pVvdHdr->vertexDataStart;
-	vertexdata.pTangentData = (byte *)pVvdHdr + pVvdHdr->tangentDataStart;
+	g_pActiveStudioHdr->pVertexBase = (void*)pNewVvdHdr; 
+
+	vertexdata.pVertexData  = (byte *)pNewVvdHdr + pNewVvdHdr->vertexDataStart;
+	vertexdata.pTangentData = (byte *)pNewVvdHdr + pNewVvdHdr->tangentDataStart;
+
+	free(pVvdHdr);
 
 	return &vertexdata;
 }
@@ -1638,5 +1738,6 @@ namespace OptimizedModel
 	void WriteOptimizedFiles( studiohdr_t *phdr, s_bodypart_t *pSrcBodyParts );
 
 }; // namespace OptimizedModel
+
 
 #endif

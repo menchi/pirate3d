@@ -194,4 +194,98 @@ struct ColorRGBExp32
 	signed char exponent;
 };
 
+struct dgamelumpheader_t
+{
+	int lumpCount;
+
+	// dclientlump_ts follow this
+};
+
+// This is expected to be a four-CC code ('lump')
+typedef int GameLumpId_t;
+
+struct dgamelump_t
+{
+	GameLumpId_t	id;
+	unsigned short flags;		// currently unused, but you never know!
+	unsigned short version;
+	int	fileofs;
+	int filelen;
+};
+
+//-----------------------------------------------------------------------------
+// This is the data associated with the GAMELUMP_STATIC_PROPS lump
+//-----------------------------------------------------------------------------
+enum
+{
+	STATIC_PROP_NAME_LENGTH  = 128,
+
+	// Flags field
+	// These are automatically computed
+	STATIC_PROP_FLAG_FADES	= 0x1,
+	STATIC_PROP_USE_LIGHTING_ORIGIN	= 0x2,
+
+	// These are set in WC
+	STATIC_PROP_NO_SHADOW	= 0x10,
+	STATIC_PROP_SCREEN_SPACE_FADE	= 0x20,
+
+	STATIC_PROP_NO_PER_VERTEX_LIGHTING = 0x40,				// in vrad, compute lighting at
+	// lighting origin, not for each vertex
+
+	STATIC_PROP_NO_SELF_SHADOWING = 0x80,					// disable self shadowing in vrad
+
+	STATIC_PROP_WC_MASK		= 0xd0,							// all flags settable in hammer (?)
+};
+
+class QAngle					
+{
+public:
+	// Members
+	float x, y, z;
+};
+
+struct StaticPropDictLump_t
+{
+	char	m_Name[STATIC_PROP_NAME_LENGTH];		// model name
+};
+
+struct StaticPropLumpV4_t
+{
+	Vector		m_Origin;
+	QAngle		m_Angles;
+	unsigned short	m_PropType;
+	unsigned short	m_FirstLeaf;
+	unsigned short	m_LeafCount;
+	unsigned char	m_Solid;
+	unsigned char	m_Flags;
+	int			m_Skin;
+	float		m_FadeMinDist;
+	float		m_FadeMaxDist;
+	Vector		m_LightingOrigin;
+	//	int			m_Lighting;			// index into the GAMELUMP_STATIC_PROP_LIGHTING lump
+};
+
+struct StaticPropLump_t
+{
+	Vector		m_Origin;
+	QAngle		m_Angles;
+	unsigned short	m_PropType;
+	unsigned short	m_FirstLeaf;
+	unsigned short	m_LeafCount;
+	unsigned char	m_Solid;
+	unsigned char	m_Flags;
+	int			m_Skin;
+	float		m_FadeMinDist;
+	float		m_FadeMaxDist;
+	Vector		m_LightingOrigin;
+	float		m_flForcedFadeScale;
+	//	int			m_Lighting;			// index into the GAMELUMP_STATIC_PROP_LIGHTING lump
+};
+
+
+struct StaticPropLeafLump_t
+{
+	unsigned short	m_Leaf;
+};
+
 #endif
