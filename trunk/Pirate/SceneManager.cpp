@@ -8,13 +8,26 @@
 #include "BSPFileLoader.h"
 #include "MDLFileLoader.h"
 #include "os.h"
+#include "IShaderConstantSetCallback.h"
 
 namespace Pirate
 {
 
+	class ShaderConstantSetter : public IShaderConstantSetCallBack
+	{
+	public:
+		virtual void OnSetConstants(D3D9Driver* services, s32 userData)
+		{
+			matrix4 ViewProjectionMatrix = services->GetTransform(ETS_PROJECTION) * 
+										   services->GetTransform(ETS_VIEW) *
+										   services->GetTransform(ETS_WORLD);
+			services->SetVertexShaderConstant("mWorldViewProj", ViewProjectionMatrix.pointer(), 16);
+		}
+	};
+
 //! constructor
-SceneManager::SceneManager(D3D9Driver* driver, FileSystem* fs, MeshCache* cache)
-	: SceneNode(0, 0), m_pDriver(driver), m_pFileSystem(fs), m_pActiveCamera(0),
+SceneManager::SceneManager(D3D9Driver* driver, FileSystem* fs, DeviceWin32::CursorControl* cursorControl, MeshCache* cache)
+	: SceneNode(0, 0), m_pDriver(driver), m_pFileSystem(fs), m_pActiveCamera(0), m_pCursorControl(cursorControl),
 	m_pMeshCache(cache), m_eCurrentRendertime(ESNRP_COUNT)
 {
 #ifdef _DEBUG
@@ -27,6 +40,9 @@ SceneManager::SceneManager(D3D9Driver* driver, FileSystem* fs, MeshCache* cache)
 
 	if (m_pFileSystem)
 		m_pFileSystem->Grab();
+
+	if (m_pCursorControl)
+		m_pCursorControl->Grab();
 
 	// create mesh cache if not there already
 	if (!m_pMeshCache)
@@ -45,6 +61,9 @@ SceneManager::~SceneManager()
 
 	if (m_pFileSystem)
 		m_pFileSystem->Drop();
+
+	if (m_pCursorControl)
+		m_pCursorControl->Drop();
 
 	if (m_pActiveCamera)
 		m_pActiveCamera->Drop();
@@ -164,14 +183,13 @@ CameraSceneNode* SceneManager::AddCameraSceneNode(SceneNode* parent, const vecto
 
 //! Adds a camera scene node which is able to be controled with the mouse and keys
 //! like in most first person shooters (FPS):
-CameraSceneNode* SceneManager::AddCameraSceneNodeFPS(DeviceWin32::CursorControl* cursorControl, SceneNode* parent, 
-													 f32 rotateSpeed, f32 moveSpeed, s32 id,
+CameraSceneNode* SceneManager::AddCameraSceneNodeFPS(SceneNode* parent, f32 rotateSpeed, f32 moveSpeed, s32 id,
 													 SKeyMap* keyMapArray, s32 keyMapSize, BOOL noVerticalMovement,f32 jumpSpeed)
 {
 	if (!parent)
 		parent = this;
 
-	CameraSceneNode* node = new CameraFPSSceneNode(parent, this, cursorControl,
+	CameraSceneNode* node = new CameraFPSSceneNode(parent, this, m_pCursorControl,
 		id, rotateSpeed, moveSpeed, jumpSpeed, keyMapArray, keyMapSize, noVerticalMovement);
 	node->Drop();
 
@@ -608,13 +626,13 @@ MeshCache* SceneManager::GetMeshCache()
 //! Creates a new scene manager.
 SceneManager* SceneManager::CreateNewSceneManager()
 {
-	return new SceneManager(m_pDriver, m_pFileSystem, m_pMeshCache);
+	return new SceneManager(m_pDriver, m_pFileSystem, m_pCursorControl, m_pMeshCache);
 }
 
 // creates a scenemanager
 SceneManager* CreateSceneManager(D3D9Driver* driver, FileSystem* fs, DeviceWin32::CursorControl* cursorcontrol )
 {
-	return new SceneManager(driver, fs, 0);
+	return new SceneManager(driver, fs, cursorcontrol, 0);
 }
 
 //! Loads a scene. Note that the current scene is not cleared before.
@@ -637,6 +655,11 @@ BOOL SceneManager::LoadScene(const c8* filename)
 		return 0;
 	}
 
+	ShaderConstantSetter* setter = NULL;
+
+	SceneNode* pZUpToYUp = this->AddEmptySceneNode();
+	pZUpToYUp->SetRotation(vector3df(-90.f, 0.0f, 0.0f));
+
 	BspFileLoader bspLoader(m_pFileSystem, m_pDriver);
 	if (bspLoader.IsALoadableFileExtension(name.c_str()))
 	{
@@ -645,31 +668,77 @@ BOOL SceneManager::LoadScene(const c8* filename)
 		if (msh)
 		{
 			m_pMeshCache->AddMesh(filename, msh);
+			MeshSceneNode* pNode = this->AddMeshSceneNode(msh, pZUpToYUp);
 			msh->Drop();
+
+			setter = new ShaderConstantSetter();
+
+			s32 newM = m_pDriver->AddHighLevelShaderMaterialFromFiles("..\\..\\Media\\GenericLightmap.hlsl", "vertexMain", 
+				"..\\..\\Media\\GenericLightmap.hlsl", "pixelMain", setter);
+
+			setter->Drop();
+
+			for (u32 i=0; i<msh->GetMeshBufferCount(); i++)
+			{
+				msh->GetMeshBuffer(i)->m_Material.ShaderType = newM;
+				msh->GetMeshBuffer(i)->m_Material.BackfaceCulling = D3DCULL_CW;
+				msh->GetMeshBuffer(i)->m_Material.Filter = D3DTEXF_LINEAR;
+			}
+			pNode->SetReadOnlyMaterials(TRUE);
 		}
+	}
+
+	s32 pathEnd = name.findLast('/');
+	stringc path = name.subString(0, pathEnd + 1);
+
+	for (int i=0; i<bspLoader.GetEntityCount(); i++)
+	{
+		stringc modelName = bspLoader.GetEntity(i).ModelName;
+
+		if (modelName == "info_player_start")
+		{
+			CameraSceneNode* pCamera = AddCameraSceneNodeFPS();
+			vector3df tmpVec(bspLoader.GetEntity(i).Origin.X, bspLoader.GetEntity(i).Origin.Z+32, bspLoader.GetEntity(i).Origin.Y);
+			pCamera->SetPosition(tmpVec);
+			pCamera->SetRotation(bspLoader.GetEntity(i).Angles);
+
+			continue;
+		}
+
+		pathEnd = modelName.findLast('/');
+		name = path + modelName.subString(pathEnd + 1, modelName.size() - pathEnd);
+		msh = GetMesh(name.c_str());
+
+		if (!msh)
+		{
+			Printer::Log("Could not load mesh, file format seems to be unsupported", filename, ELL_ERROR);
+			continue;
+		}
+
+		MeshSceneNode* pNode = this->AddMeshSceneNode(msh, pZUpToYUp);
+		vector3df tmpV3df = bspLoader.GetEntity(i).Angles;
+		pNode->SetRotation(tmpV3df);
+		pNode->SetPosition(bspLoader.GetEntity(i).Origin);
+		
+		pNode->SetReadOnlyMaterials(TRUE);
+
+		setter = new ShaderConstantSetter();
+
+		s32 newM = m_pDriver->AddHighLevelShaderMaterialFromFiles("..\\..\\Media\\BaseTexture.hlsl", "vertexMain", 
+			"..\\..\\Media\\BaseTexture.hlsl", "pixelMain", setter);
+
+		setter->Drop();
+
+		for (u32 i=0; i<msh->GetMeshBufferCount(); i++)
+		{
+			msh->GetMeshBuffer(i)->m_Material.ShaderType = newM;
+			msh->GetMeshBuffer(i)->m_Material.BackfaceCulling = D3DCULL_CW;
+			msh->GetMeshBuffer(i)->m_Material.Filter = D3DTEXF_LINEAR;
+		}
+
 	}
 
 	file->Drop();
-
-	if (!msh)
-		Printer::Log("Could not load mesh, file format seems to be unsupported", filename, ELL_ERROR);
-	else
-		Printer::Log("Loaded mesh", filename, ELL_INFORMATION);
-/*
-	MDLFileLoader mdlLoader(m_pFileSystem, m_pDriver);
-	if (mdlLoader.IsALoadableFileExtension(name.c_str()))
-	{
-		file->Seek(0);
-		msh = mdlLoader.CreateMesh(file);
-		if (msh)
-		{
-			m_pMeshCache->AddMesh(filename, msh);
-			msh->Drop();
-		}
-	}
-*/
-
-
 
 	return TRUE;
 }

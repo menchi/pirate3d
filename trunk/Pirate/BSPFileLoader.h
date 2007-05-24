@@ -2,6 +2,8 @@
 #define _PIRATE_BSP_FILE_LOADER_H_
 
 #include "RefObject.h"
+#include "pirateString.h"
+#include "vector3d.h"
 
 namespace Pirate
 {
@@ -14,6 +16,13 @@ class FileSystem;
 class BspFileLoader : public virtual RefObject
 {
 public:
+
+	struct EntityInfo
+	{
+		stringc		ModelName;
+		vector3df	Origin;       // origin
+		vector3df	Angles;       // orientation (pitch roll yaw)
+	};
 
 	//! Constructor
 	BspFileLoader(FileSystem* fs, D3D9Driver* driver);
@@ -31,13 +40,20 @@ public:
 	See IUnknown::drop() for more information. */
 	SMesh* CreateMesh(FileReader* file);
 
-	const c8* GetEntities() const;
+	//! Get entity number in current bsp
+	const s32 GetEntityCount() const;
+
+	//! Get entity information
+	const EntityInfo& GetEntity(s32 i) const;
 
 private:
 
+	BOOL ParseModels(const stringc& entity);
+	BOOL ParsePlayerStartInfo(const stringc& entity);
+
 	FileSystem* m_pFileSystem;
 	D3D9Driver* m_pDriver;
-	c8* m_pEntities;
+	array<EntityInfo> m_Entities;
 };
 
 

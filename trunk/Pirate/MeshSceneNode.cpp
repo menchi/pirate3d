@@ -111,6 +111,7 @@ void MeshSceneNode::Render()
 
 	++m_iPassCount;
 
+	driver->SetTransform(ETS_WORLD, m_AbsoluteTransformation);
 	m_Box = m_pMesh->GetBoundingBox();
 
 	// for debug purposes only:

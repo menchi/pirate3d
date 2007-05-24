@@ -76,7 +76,7 @@ class SceneManager : public virtual RefObject, public SceneNode
 public:
 
 	//! constructor
-	SceneManager(D3D9Driver* driver, FileSystem* fs, MeshCache* cache = 0 );
+	SceneManager(D3D9Driver* driver, FileSystem* fs, DeviceWin32::CursorControl* cursorControl, MeshCache* cache = 0 );
 
 	//! destructor
 	~SceneManager();
@@ -122,8 +122,7 @@ public:
 
 	//! Adds a camera scene node which is able to be controled with the mouse and keys
 	//! like in most first person shooters (FPS):
-	CameraSceneNode* AddCameraSceneNodeFPS( DeviceWin32::CursorControl* cursorControl, 
-		SceneNode* parent = 0,
+	CameraSceneNode* AddCameraSceneNodeFPS( SceneNode* parent = 0,
 		f32 rotateSpeed = 1500.0f, f32 moveSpeed = 200.0f, s32 id=-1,
 		SKeyMap* keyMapArray=0, s32 keyMapSize=0, BOOL noVerticalMovement=FALSE,
 		f32 jumpSpeed = 0.f);
@@ -277,6 +276,9 @@ private:
 
 	//! file system
 	FileSystem* m_pFileSystem;
+
+	//! cursor control
+	DeviceWin32::CursorControl* m_pCursorControl;
 
 	//! render pass lists
 	array<SceneNode*> m_CameraList;
