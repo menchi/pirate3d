@@ -81,7 +81,7 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
 			CharacterSet="1"
@@ -122,6 +122,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				OutputFile="..\lib\$(ProjectName).lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -356,6 +357,14 @@
 			</File>
 			<File
 				RelativePath=".\BSPHelper.h"
+				>
+			</File>
+			<File
+				RelativePath=".\BSPSceneNode.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\BSPSceneNode.h"
 				>
 			</File>
 			<File

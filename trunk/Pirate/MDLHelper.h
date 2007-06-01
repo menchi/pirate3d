@@ -4,6 +4,7 @@
 #include "FileSystem.h"
 #include "os.h"
 #include <xmmintrin.h>
+#include <assert.h>
 
 #ifndef offsetof
 #define offsetof(s,m)	(size_t)&(((s *)0)->m)

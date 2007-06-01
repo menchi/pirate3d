@@ -2,8 +2,6 @@
 
 using namespace Pirate;
 
-
-
 void main()
 {
 	// Enable run-time memory check for debug builds.
@@ -18,7 +16,7 @@ void main()
 
 	SceneManager* pSceneManager = pDevice->GetSceneManager();
 
-	pSceneManager->LoadScene("../../Media/FirstMap.bsp");
+	pSceneManager->LoadScene("../../Media/d1_trainstation_02/d1_trainstation_02.bsp");
 
 	int lastFPS = -1;
 

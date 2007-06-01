@@ -8,6 +8,8 @@
 namespace Pirate
 {
 
+#define LIGHTMAP_GAMMA 2.2f
+
 D3DVERTEXELEMENT9 BspVertexDecl[] = 
 {
 	{0,  0,  D3DDECLTYPE_FLOAT3,   D3DDECLMETHOD_DEFAULT, D3DDECLUSAGE_POSITION, 0},
@@ -31,7 +33,7 @@ struct BSP_VT
 
 //! Constructor
 BspFileLoader::BspFileLoader(FileSystem* fs, D3D9Driver* driver)
-: m_pFileSystem(fs), m_pDriver(driver)
+: m_pFileSystem(fs), m_pDriver(driver), m_pBSPTree(0)
 {
 	if (m_pFileSystem)
 		m_pFileSystem->Grab();
@@ -45,6 +47,9 @@ BspFileLoader::BspFileLoader(FileSystem* fs, D3D9Driver* driver)
 //! destructor
 BspFileLoader::~BspFileLoader()
 {
+	if (m_pBSPTree)
+		m_pBSPTree->Drop();
+
 	if (m_pFileSystem)
 		m_pFileSystem->Drop();
 
@@ -80,7 +85,7 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	char* pIdentString = (char*)&header.ident;
 	//	std::cout<<pIdentString<<" "<<header.version<<" "<<header.mapRevision<<std::endl;
 	stringc idString(pIdentString);
-	if (!idString.equalsn("VBSP", 4) || header.version<20)
+	if (!idString.equalsn("VBSP", 4) || header.version<19)
 	{
 		Printer::Log("Not an available HL2 bsp file format", ELL_WARNING);
 		return NULL;
@@ -129,6 +134,32 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	file->Seek((header.lumps[LUMP_GAME_LUMP]).fileofs);
 	dgamelumpheader_t* pGameLumpHdr = (dgamelumpheader_t*)malloc(header.lumps[LUMP_GAME_LUMP].filelen);
 	file->Read(pGameLumpHdr, header.lumps[LUMP_GAME_LUMP].filelen);
+
+	file->Seek((header.lumps[LUMP_NODES].fileofs));
+	dnode_t* pNodes = (dnode_t*)malloc(header.lumps[LUMP_NODES].filelen);
+	file->Read(pNodes, header.lumps[LUMP_NODES].filelen);
+
+	int leafVer = header.lumps[LUMP_LEAFS].version;
+	int leaf_t_size = (leafVer == 1)? sizeof(dleaf_t): sizeof(dleaf_version_0_t);
+	file->Seek((header.lumps[LUMP_LEAFS].fileofs));
+	c8* pLeaves = (c8*)malloc(header.lumps[LUMP_LEAFS].filelen);
+	file->Read(pLeaves, header.lumps[LUMP_LEAFS].filelen);
+
+	file->Seek((header.lumps[LUMP_PLANES].fileofs));
+	dplane_t* pPlanes = (dplane_t*)malloc(header.lumps[LUMP_PLANES].filelen);
+	file->Read(pPlanes, header.lumps[LUMP_PLANES].filelen);
+
+	file->Seek((header.lumps[LUMP_LEAFFACES].fileofs));
+	s16* pLeafFaces = (s16*)malloc(header.lumps[LUMP_LEAFFACES].filelen);
+	file->Read(pLeafFaces, header.lumps[LUMP_LEAFFACES].filelen);
+
+	file->Seek((header.lumps[LUMP_VISIBILITY].fileofs));
+	s32* pVisLump = (s32*)malloc(header.lumps[LUMP_VISIBILITY].filelen);
+	file->Read(pVisLump, header.lumps[LUMP_VISIBILITY].filelen);
+
+	file->Seek((header.lumps[LUMP_MODELS].fileofs));
+	dmodel_t* pModels = (dmodel_t*)malloc(header.lumps[LUMP_MODELS].filelen);
+	file->Read(pModels, header.lumps[LUMP_MODELS].filelen);
 
 	dgamelump_t* pGameLumps = (dgamelump_t*)(pGameLumpHdr + 1);
 
@@ -224,7 +255,7 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 			tc3 /= lightmapW;
 			tc4 /= lightmapH;
 
-			tmpVertices.push_back(BSP_VT(pVertices[v1].point._v[0], pVertices[v1].point._v[1], pVertices[v1].point._v[2],
+			tmpVertices.push_back(BSP_VT(pVertices[v1].point._v[1], pVertices[v1].point._v[2], -pVertices[v1].point._v[0],
 										 tc1, tc2, tc3, tc4));
 
 			if (i == surfedgeStart)
@@ -252,6 +283,9 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 		relpath = fullname.subString(0, pathend + 1);
 
 	SMesh* pMesh = new SMesh();
+	m_pBSPTree = new BSPTree();
+	m_pBSPTree->m_FaceNormals.reallocate(faceCount);
+
 	for (int j=0; j<faceCount; j++)
 	{
 		SD3D9MeshBuffer* pMB = NULL;
@@ -277,12 +311,54 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 		memcpy(pIndices, tmpIndices[j].const_pointer(), indexBufferSize);
 		pMB->GetIndexBuffer()->Unlock();
 
-		stringc textureName = pTexStringData + pTexStringTable[pTexData[pTexinfos[pFaces[j].texinfo].texdata].nameStringTableID];
-		s32 lastSlash = textureName.findLast('/');
-		textureName = textureName.c_str() + lastSlash + 1;
-		textureName = relpath + textureName + ".tga";
-		D3D9Texture* pTexture = m_pDriver->GetTexture(textureName.c_str());
-		pMB->m_Material.Textures[0] = pTexture;
+		for (u32 i=0; i<tmpIndices[j].size(); i++)
+		{
+			pMB->m_BoundingBox.addInternalPoint(tmpVertices[tmpIndices[j][i]].pos[0],
+												tmpVertices[tmpIndices[j][i]].pos[1],
+												tmpVertices[tmpIndices[j][i]].pos[2]);
+		}
+
+
+		stringc materialName = pTexStringData + pTexStringTable[pTexData[pTexinfos[pFaces[j].texinfo].texdata].nameStringTableID];
+		s32 lastSlash = materialName.findLast('/');
+		lastSlash = (lastSlash == -1)? materialName.findLast('\\') :lastSlash;
+		materialName = materialName.c_str() + lastSlash + 1;
+		materialName = relpath + materialName + ".vmt";
+		FileReader* vmtReader = CreateReadFile(materialName.c_str());
+		c8 buf[4096];
+		vmtReader->Read(buf, vmtReader->GetSize());
+		stringc vmtText = buf;
+		vmtText.make_lower();
+
+		s32 pos = vmtText.find("include");
+
+		if (pos != -1)
+		{
+			pos = vmtText.findNext('"', pos+8);
+			stringc incMaterial = (vmtText.subString(pos+1, vmtText.findNext('"', pos+1)-pos-1));
+			lastSlash = incMaterial.findLast('/');
+			lastSlash = (lastSlash == -1)? incMaterial.findLast('\\') :lastSlash;
+			incMaterial = relpath + (incMaterial.c_str() + lastSlash + 1);
+			vmtReader->Drop();
+			vmtReader = CreateReadFile(incMaterial.c_str());
+			vmtReader->Read(buf, vmtReader->GetSize());
+			vmtText = buf;
+			vmtText.make_lower();
+		}
+
+		vmtReader->Drop();
+		pos = vmtText.find("$basetexture");
+
+		if (pos != -1)
+		{
+			pos = vmtText.findNext('"', pos+13);
+			stringc basetexture = (vmtText.subString(pos+1, vmtText.findNext('"', pos+1)-pos-1) + ".tga");
+			lastSlash = basetexture.findLast('/');
+			lastSlash = (lastSlash == -1)? basetexture.findLast('\\') :lastSlash;
+			basetexture = relpath + (basetexture.c_str() + lastSlash + 1);
+			D3D9Texture* pTexture = m_pDriver->GetTexture(basetexture.c_str());
+			pMB->m_Material.Textures[0] = pTexture;
+		}
 
 		stringc lightmapName = pFaces[j].lightofs;
 		s32 lightmapW = pFaces[j].m_LightmapTextureSizeInLuxels[0]+1;
@@ -295,11 +371,11 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 		for (s32 i=0; i<luxelCount; i++)
 		{
 			pLuxels[i*4]   = (u8)(powf((round(clamp<float>(pLightmap[i].b * powf(2.0f, pLightmap[i].exponent), 0.0f, 255.0f)))
-				/ 255.f, 1.f/2.2f) *255.f);
+				/ 255.f, 1.f/LIGHTMAP_GAMMA) *255.f);
 			pLuxels[i*4+1] = (u8)(powf((round(clamp<float>(pLightmap[i].g * powf(2.0f, pLightmap[i].exponent), 0.0f, 255.0f)))
-				/ 255.f, 1.f/2.2f) *255.f);
+				/ 255.f, 1.f/LIGHTMAP_GAMMA) *255.f);
 			pLuxels[i*4+2] = (u8)(powf((round(clamp<float>(pLightmap[i].r * powf(2.0f, pLightmap[i].exponent), 0.0f, 255.0f)))
-				/ 255.f, 1.f/2.2f) *255.f);
+				/ 255.f, 1.f/LIGHTMAP_GAMMA) *255.f);
 			pLuxels[i*4+3] = 255;
 		}
 		pD3DLightmap->Unlock();
@@ -309,6 +385,74 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 
 		pMesh->AddMeshBuffer(pMB);
 		pMB->Drop();
+
+		vector3df planeNormal(pPlanes[pFaces[j].planenum].normal._v[1], 
+			pPlanes[pFaces[j].planenum].normal._v[2],
+			-pPlanes[pFaces[j].planenum].normal._v[0]);
+		m_pBSPTree->m_FaceNormals.push_back(planeNormal);
+	}
+
+	pMesh->RecalculateBoundingBox();
+
+	s32 nodeCount = header.lumps[LUMP_NODES].filelen / sizeof(dnode_t);
+	m_pBSPTree->m_Nodes.reallocate(nodeCount);
+	for (s32 i=0; i<nodeCount; i++)
+	{
+		BSPTree::Node bspNode;
+		bspNode.Plane.setPlane(vector3df(pPlanes[pNodes[i].planenum].normal._v[1],
+			pPlanes[pNodes[i].planenum].normal._v[2],
+			-pPlanes[pNodes[i].planenum].normal._v[0]), -pPlanes[pNodes[i].planenum].dist);
+		bspNode.Children[0] = pNodes[i].children[0];
+		bspNode.Children[1] = pNodes[i].children[1];
+		bspNode.Bounding = aabbox3df((float)pNodes[i].mins[1], (float)pNodes[i].mins[2], (float)-pNodes[i].mins[0],
+			(float)pNodes[i].maxs[1], (float)pNodes[i].maxs[2], (float)-pNodes[i].maxs[0]);
+		m_pBSPTree->m_Nodes.push_back(bspNode);
+	}
+
+	s32 leafCount = header.lumps[LUMP_LEAFS].filelen / leaf_t_size;
+	m_pBSPTree->m_Leaves.reallocate(leafCount);
+
+	for (s32 i=0; i<leafCount; i++)
+	{
+		BSPTree::Leaf bspLeaf;
+		if (leafVer > 0)
+		{
+			dleaf_t* pLeavesV1 = (dleaf_t*)pLeaves;
+			bspLeaf.Cluster = pLeavesV1[i].cluster;
+			bspLeaf.Bounding = aabbox3df((float)pLeavesV1[i].mins[1], (float)pLeavesV1[i].mins[2], (float)-pLeavesV1[i].mins[0],
+				(float)pLeavesV1[i].maxs[1], (float)pLeavesV1[i].maxs[2], (float)-pLeavesV1[i].maxs[0]);
+			bspLeaf.Leaffaces.reallocate(pLeavesV1[i].numleaffaces);
+			for (s32 j=0; j<pLeavesV1[i].numleaffaces; j++)
+				bspLeaf.Leaffaces.push_back(pLeafFaces[pLeavesV1[i].firstleafface+j]);
+		}
+		else
+		{
+			dleaf_version_0_t* pLeavesV0 = (dleaf_version_0_t*)pLeaves;
+			bspLeaf.Cluster = pLeavesV0[i].cluster;
+			bspLeaf.Bounding = aabbox3df((float)pLeavesV0[i].mins[1], (float)pLeavesV0[i].mins[2], (float)-pLeavesV0[i].mins[0],
+				(float)pLeavesV0[i].maxs[1], (float)pLeavesV0[i].maxs[2], (float)-pLeavesV0[i].maxs[0]);
+			bspLeaf.Leaffaces.reallocate(pLeavesV0[i].numleaffaces);
+			for (s32 j=0; j<pLeavesV0[i].numleaffaces; j++)
+			{
+				bspLeaf.Leaffaces.push_back(pLeafFaces[pLeavesV0[i].firstleafface+j]);
+			}
+		}
+
+		m_pBSPTree->m_Leaves.push_back(bspLeaf);
+	}
+
+	m_pBSPTree->m_pVisLump = pVisLump;
+
+	m_pBSPTree->m_Flags.reallocate(pMesh->GetMeshBufferCount());
+	m_pBSPTree->m_Flags.set_used(pMesh->GetMeshBufferCount());
+
+	memset(m_pBSPTree->m_Flags.pointer(), 0, m_pBSPTree->m_Flags.allocated_size());
+
+	for (u32 i=0; i<pMesh->GetMeshBufferCount(); i++)
+	{
+		if (pMesh->GetMeshBuffer(i)->GetMaterial().Textures[0] &&
+			pMesh->GetMeshBuffer(i)->GetMaterial().Textures[0]->GetName().find("tools") != -1)
+			m_pBSPTree->m_Flags[i] |= BSPTree::EFF_SPECIAL_MATERIAL;
 	}
 
 	free(pVertices);
@@ -322,6 +466,10 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	free(pTexStringTable);
 	free(pGameLumpHdr);
 	free(pEntities);
+	free(pNodes);
+	free(pLeaves);
+	free(pPlanes);
+	free(pLeafFaces);
 
 	return pMesh;
 }
@@ -334,6 +482,12 @@ const s32 BspFileLoader::GetEntityCount() const
 const BspFileLoader::EntityInfo& BspFileLoader::GetEntity(s32 i) const
 {
 	return m_Entities[i];
+}
+
+//! Get BSP tree for visibility test
+BSPTree* BspFileLoader::GetBSPTree() const
+{
+	return m_pBSPTree;
 }
 
 BOOL BspFileLoader::ParseModels(const stringc& entity)
