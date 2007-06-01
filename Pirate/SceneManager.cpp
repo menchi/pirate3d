@@ -1,6 +1,7 @@
 #include "SceneManager.h"
 #include "MeshSceneNode.h"
 #include "EmptySceneNode.h"
+#include "BSPSceneNode.h"
 #include "D3D9Driver.h"
 #include "FileSystem.h"
 #include "MeshCache.h"
@@ -162,6 +163,24 @@ MeshSceneNode* SceneManager::AddMeshSceneNode(SMesh* mesh, SceneNode* parent, s3
 		parent = this;
 
 	MeshSceneNode* node = new MeshSceneNode(mesh, parent, this, id, position, rotation, scale);
+	node->Drop();
+
+	return node;
+}
+
+//! adds a scene node for rendering a BSP tree
+//! the returned pointer must not be dropped.
+BSPSceneNode* SceneManager::AddBSPSceneNode(BSPTree* tree, SMesh* mesh, SceneNode* parent, s32 id,
+											const vector3df& position, const vector3df& rotation,
+											const vector3df& scale, BOOL alsoAddIfMeshPointerZero)
+{
+	if (!alsoAddIfMeshPointerZero && !mesh)
+		return 0;
+
+	if (!parent)
+		parent = this;
+
+	BSPSceneNode* node = new BSPSceneNode(tree, mesh, parent, this, id, position, rotation, scale);
 	node->Drop();
 
 	return node;
@@ -461,7 +480,8 @@ void SceneManager::DrawAll()
 
 		m_LightList.sort ();		// on distance to camera
 
-		u32 maxLights = Pirate::min_ ( /*m_pDriver->GetMaximalDynamicLightAmount()*/2u, m_LightList.size () );
+		//u32 maxLights = Pirate::min_ ( m_pDriver->GetMaximalDynamicLightAmount(), m_LightList.size () );
+		u32 maxLights = Pirate::min_ ( 2u, m_LightList.size () );
 		for (i=0; i< maxLights; ++i)
 			m_LightList[i].node->Render();
 
@@ -496,10 +516,10 @@ void SceneManager::DrawAll()
 		for (i=0; i<m_ShadowNodeList.size(); ++i)
 			m_ShadowNodeList[i]->Render();
 
-/*		if (!m_ShadowNodeList.empty())
-			m_pDriver->DrawStencilShadow(true, ShadowColor, ShadowColor,
-			ShadowColor, ShadowColor);
-*/
+//		if (!m_ShadowNodeList.empty())
+//			m_pDriver->DrawStencilShadow(true, ShadowColor, ShadowColor,
+//			ShadowColor, ShadowColor);
+
 		m_ShadowNodeList.clear();
 	}
 
@@ -658,17 +678,18 @@ BOOL SceneManager::LoadScene(const c8* filename)
 	ShaderConstantSetter* setter = NULL;
 
 	SceneNode* pZUpToYUp = this->AddEmptySceneNode();
-	pZUpToYUp->SetRotation(vector3df(-90.f, 0.0f, 0.0f));
+//	pZUpToYUp->SetRotation(vector3df(-90.f, 0.0f, 0.0f));
 
 	BspFileLoader bspLoader(m_pFileSystem, m_pDriver);
 	if (bspLoader.IsALoadableFileExtension(name.c_str()))
 	{
 		file->Seek(0);
-		msh = bspLoader.CreateMesh(file);
+		msh = (SMesh*)bspLoader.CreateMesh(file);
 		if (msh)
 		{
 			m_pMeshCache->AddMesh(filename, msh);
-			MeshSceneNode* pNode = this->AddMeshSceneNode(msh, pZUpToYUp);
+			BSPSceneNode* pNode = this->AddBSPSceneNode(bspLoader.GetBSPTree(), msh, pZUpToYUp);
+			//MeshSceneNode* pNode = this->AddMeshSceneNode(msh, pZUpToYUp);
 			msh->Drop();
 
 			setter = new ShaderConstantSetter();
@@ -681,8 +702,9 @@ BOOL SceneManager::LoadScene(const c8* filename)
 			for (u32 i=0; i<msh->GetMeshBufferCount(); i++)
 			{
 				msh->GetMeshBuffer(i)->m_Material.ShaderType = newM;
-				msh->GetMeshBuffer(i)->m_Material.BackfaceCulling = D3DCULL_CW;
+				//msh->GetMeshBuffer(i)->m_Material.BackfaceCulling = D3DCULL_CW;
 				msh->GetMeshBuffer(i)->m_Material.Filter = D3DTEXF_LINEAR;
+				//msh->GetMeshBuffer(i)->m_Material.Wireframe = TRUE;
 			}
 			pNode->SetReadOnlyMaterials(TRUE);
 		}
@@ -695,16 +717,16 @@ BOOL SceneManager::LoadScene(const c8* filename)
 	{
 		stringc modelName = bspLoader.GetEntity(i).ModelName;
 
-		if (modelName == "info_player_start")
+		if (modelName == "info_player_start" && !GetActiveCamera())
 		{
 			CameraSceneNode* pCamera = AddCameraSceneNodeFPS();
-			vector3df tmpVec(bspLoader.GetEntity(i).Origin.X, bspLoader.GetEntity(i).Origin.Z+32, bspLoader.GetEntity(i).Origin.Y);
+			vector3df tmpVec(bspLoader.GetEntity(i).Origin.Y, bspLoader.GetEntity(i).Origin.Z+32, -bspLoader.GetEntity(i).Origin.X);
 			pCamera->SetPosition(tmpVec);
 			pCamera->SetRotation(bspLoader.GetEntity(i).Angles);
 
 			continue;
 		}
-
+/*
 		pathEnd = modelName.findLast('/');
 		name = path + modelName.subString(pathEnd + 1, modelName.size() - pathEnd);
 		msh = GetMesh(name.c_str());
@@ -735,7 +757,7 @@ BOOL SceneManager::LoadScene(const c8* filename)
 			msh->GetMeshBuffer(i)->m_Material.BackfaceCulling = D3DCULL_CW;
 			msh->GetMeshBuffer(i)->m_Material.Filter = D3DTEXF_LINEAR;
 		}
-
+*/
 	}
 
 	file->Drop();

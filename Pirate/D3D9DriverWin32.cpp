@@ -459,7 +459,7 @@ BOOL D3D9Driver::SetRenderStates3DMode()
 	{
 		// unset old material
 
-		if (/*CurrentRenderMode == ERM_3D &&*/
+		if (//CurrentRenderMode == ERM_3D &&
 			m_LastMaterial.ShaderType != m_Material.ShaderType &&
 			m_LastMaterial.ShaderType >= 0 && m_LastMaterial.ShaderType < (s32)m_MaterialRenderers.size())
 			m_MaterialRenderers[m_LastMaterial.ShaderType].Renderer->OnUnsetMaterial();

@@ -288,4 +288,84 @@ struct StaticPropLeafLump_t
 	unsigned short	m_Leaf;
 };
 
+struct dnode_t
+{
+	int			planenum;
+	int			children[2];	// negative numbers are -(leafs+1), not nodes
+	short		mins[3];		// for frustom culling
+	short		maxs[3];
+	unsigned short	firstface;
+	unsigned short	numfaces;	// counting both sides
+	short			area;		// If all leaves below this node are in the same area, then
+	// this is the area index. If not, this is -1.
+};
+
+struct CompressedLightCube
+{
+	ColorRGBExp32 m_Color[6];
+};
+
+struct dleaf_version_0_t
+{
+	int				contents;			// OR of all brushes (not needed?)
+
+	short			cluster;
+
+	short			area:9;
+	short			flags:7;			// Per leaf flags.
+
+	short			mins[3];			// for frustum culling
+	short			maxs[3];
+
+	unsigned short	firstleafface;
+	unsigned short	numleaffaces;
+
+	unsigned short	firstleafbrush;
+	unsigned short	numleafbrushes;
+	short			leafWaterDataID; // -1 for not in water
+
+	// Precaculated light info for entities.
+	CompressedLightCube m_AmbientLighting;
+};
+
+struct dleaf_t
+{
+	int				contents;			// OR of all brushes (not needed?)
+
+	short			cluster;
+
+	short			area:9;
+	short			flags:7;			// Per leaf flags.
+
+	short			mins[3];			// for frustum culling
+	short			maxs[3];
+
+	unsigned short	firstleafface;
+	unsigned short	numleaffaces;
+
+	unsigned short	firstleafbrush;
+	unsigned short	numleafbrushes;
+	short			leafWaterDataID; // -1 for not in water
+
+	// NOTE: removed this for version 1 and moved into separate lump "LUMP_LEAF_AMBIENT_LIGHTING" or "LUMP_LEAF_AMBIENT_LIGHTING_HDR"
+	// Precaculated light info for entities.
+	//	CompressedLightCube m_AmbientLighting;
+};
+
+struct dplane_t
+{
+	Vector	normal;
+	float	dist;
+	int		type;		// PLANE_X - PLANE_ANYZ ?remove? trivial to regenerate
+};
+
+struct dmodel_t
+{
+	Vector		mins, maxs;
+	Vector		origin;			// for sounds or lights
+	int			headnode;
+	int			firstface, numfaces;	// submodels just draw faces
+	// without walking the bsp tree
+};
+
 #endif

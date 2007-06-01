@@ -252,8 +252,8 @@ struct SD3D9MeshBuffer : public virtual RefObject
 		else
 		{
 			u32 stride = GetVertexPitch(0);
-			u8* pVert;
-			GetVertexBuffer(sourceIndex)->Lock(0, 0, (void**)pVert, D3DLOCK_READONLY);
+			u8* pVert = NULL;
+			GetVertexBuffer(sourceIndex)->Lock(0, 0, (void**)&pVert, D3DLOCK_READONLY);
 			pVert += offset;
 			f32 x = (f32)(*pVert);
 			f32 y = (f32)(*pVert+sizeof(f32));

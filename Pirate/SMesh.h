@@ -18,7 +18,7 @@ struct SMesh : public RefObject
 	}
 
 	//! destructor
-	~SMesh()
+	virtual ~SMesh()
 	{
 		// drop buffers
 		for (u32 i=0; i<m_MeshBuffers.size(); ++i)

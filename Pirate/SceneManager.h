@@ -65,8 +65,10 @@ class MeshCache;
 class D3D9Driver;
 class FileSystem;
 class MeshSceneNode;
+class BSPSceneNode;
 
 struct SMesh;
+struct BSPTree;
 
 /*!
 The Scene Manager manages scene nodes, mesh recources, cameras and all the other stuff.
@@ -93,6 +95,14 @@ public:
 	//! adds a scene node for rendering a static mesh
 	//! the returned pointer must not be dropped.
 	MeshSceneNode* AddMeshSceneNode(SMesh* mesh, SceneNode* parent=0, s32 id=-1,
+		const vector3df& position = vector3df(0,0,0), 
+		const vector3df& rotation = vector3df(0,0,0),
+		const vector3df& scale = vector3df(1.0f, 1.0f, 1.0f),
+		BOOL alsoAddIfMeshPointerZero=FALSE);
+
+	//! adds a scene node for rendering a BSP tree
+	//! the returned pointer must not be dropped.
+	BSPSceneNode* AddBSPSceneNode(BSPTree* tree, SMesh* mesh, SceneNode* parent=0, s32 id=-1,
 		const vector3df& position = vector3df(0,0,0), 
 		const vector3df& rotation = vector3df(0,0,0),
 		const vector3df& scale = vector3df(1.0f, 1.0f, 1.0f),
