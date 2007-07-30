@@ -25,7 +25,7 @@ namespace Pirate
 
 	typedef double			f64;
 
-	typedef u32				BOOL;
+	typedef bool			BOOL;
 
 	#define TRUE			1
 

@@ -2,7 +2,7 @@
 #define _PIRATE_MATH_H_
 
 #include "pirateTypes.h"
-#include <math.h>
+#include <cmath>
 
 namespace Pirate
 {
