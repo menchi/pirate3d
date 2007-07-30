@@ -4,9 +4,6 @@ Microsoft Visual Studio Solution File, Format Version 9.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pirate", "..\Pirate\Pirate.vcproj", "{8F00BFF0-9B21-4257-BDF2-D37C24CE6C2B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcproj", "{735C46AD-03EF-4671-9877-7A161B664798}"
-	ProjectSection(ProjectDependencies) = postProject
-		{8F00BFF0-9B21-4257-BDF2-D37C24CE6C2B} = {8F00BFF0-9B21-4257-BDF2-D37C24CE6C2B}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BspLoader", "BspLoader\BspLoader.vcproj", "{8E0B9BD1-7B7E-48F1-9BE4-E6DFF861A8D0}"
 	ProjectSection(ProjectDependencies) = postProject
