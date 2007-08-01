@@ -1,7 +1,8 @@
 #ifndef _PIRATE_DEVICE_WIN32_H_
 #define _PIRATE_DEVICE_WIN32_H_
 
-#include <Windows.h>
+#include "D3D9Driver.h"
+#include "boost/tr1/memory.hpp"
 
 class DeviceWin32 {
 public:
@@ -12,6 +13,7 @@ public:
 
 private:
 	HWND m_HWnd;
+	std::tr1::shared_ptr<D3D9Driver> m_pVideoDriver;
 };
 
 #endif
