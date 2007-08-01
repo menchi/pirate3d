@@ -58,11 +58,12 @@ DeviceWin32::DeviceWin32(int width, int height)
 	int windowTop = (GetSystemMetrics(SM_CYSCREEN) - realHeight) / 2;
 
 	// create window
-	HWND m_HWnd = CreateWindow( ClassName, L"", style, windowLeft, windowTop,
-		realWidth, realHeight,	NULL, NULL, hInstance, NULL);
+	HWND m_HWnd = CreateWindow( ClassName, L"", style, windowLeft, windowTop, realWidth, realHeight,	NULL, NULL, hInstance, NULL);
 
 	ShowWindow(m_HWnd , SW_SHOW);
 	UpdateWindow(m_HWnd);
+
+	m_pVideoDriver.reset(new D3D9Driver(m_HWnd, width, height, false));
 }
 
 DeviceWin32::~DeviceWin32()

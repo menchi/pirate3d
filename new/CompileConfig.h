@@ -5,6 +5,8 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
+#pragma comment(lib, "d3d9")
+
 #define _PIRATE_USE_D3DX_MATH_
 
 //! define a break macro for debugging.
