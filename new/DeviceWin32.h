@@ -10,6 +10,10 @@ public:
 	~DeviceWin32();
 
 	bool Run();
+	VideoDriverSharedPtr GetVideoDriver()
+	{
+		return m_pVideoDriver;
+	}
 
 private:
 	HWND m_HWnd;

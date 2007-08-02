@@ -5,7 +5,7 @@ D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 : m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen),
   m_pID3D9(Direct3DCreate9(D3D_SDK_VERSION), false)
 {
-	if (m_pID3D9)
+	if (!m_pID3D9)
 	{
 		std::cerr<<"Error initialize D3D9"<<std::endl;
 	}
@@ -40,10 +40,19 @@ D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 		std::cerr<<"Error create d3d9 device"<<std::endl;
 	}
 	 
-	m_pID3DDevice = IDirect3DDevice9Ptr(pID3DDevice, false);
+	m_pID3DDevice = IDirect3DDevice9SharedPtr(pID3DDevice, false);
+
+	IDirect3DSurface9* pBackBuffer;
+	m_pID3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+	m_pCanvas = CanvasSharedPtr(new Canvas(VideoDriverSharedPtr(this, null_deleter()), IDirect3DSurface9SharedPtr(pBackBuffer, false)));
 }
 
 D3D9Driver::~D3D9Driver()
 {
+	std::clog << "VideoDriver destruct" << std::endl;
+}
 
+CanvasSharedPtr D3D9Driver::GetCanvas()
+{
+	return m_pCanvas;
 }

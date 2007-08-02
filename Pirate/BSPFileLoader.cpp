@@ -156,11 +156,11 @@ SMesh* BspFileLoader::CreateMesh(FileReader* file)
 	file->Seek((header.lumps[LUMP_VISIBILITY].fileofs));
 	s32* pVisLump = (s32*)malloc(header.lumps[LUMP_VISIBILITY].filelen);
 	file->Read(pVisLump, header.lumps[LUMP_VISIBILITY].filelen);
-
+/*
 	file->Seek((header.lumps[LUMP_MODELS].fileofs));
 	dmodel_t* pModels = (dmodel_t*)malloc(header.lumps[LUMP_MODELS].filelen);
 	file->Read(pModels, header.lumps[LUMP_MODELS].filelen);
-
+*/
 	dgamelump_t* pGameLumps = (dgamelump_t*)(pGameLumpHdr + 1);
 
 	for (int i=0; i<pGameLumpHdr->lumpCount; i++)
