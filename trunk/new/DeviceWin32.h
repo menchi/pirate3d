@@ -1,8 +1,7 @@
 #ifndef _PIRATE_DEVICE_WIN32_H_
 #define _PIRATE_DEVICE_WIN32_H_
 
-#include "D3D9Driver.h"
-#include "boost/tr1/memory.hpp"
+#include "Canvas.h"
 
 class DeviceWin32 {
 public:
@@ -10,14 +9,13 @@ public:
 	~DeviceWin32();
 
 	bool Run();
-	VideoDriverSharedPtr GetVideoDriver()
-	{
-		return m_pVideoDriver;
-	}
+	VideoDriverPtr GetVideoDriver()	{ return m_pVideoDriver; }
+
+	Canvas& GetCanvas() { return *m_pVideoDriver->GetCanvas(); }
 
 private:
 	HWND m_HWnd;
-	std::tr1::shared_ptr<D3D9Driver> m_pVideoDriver;
+	VideoDriverPtr m_pVideoDriver;
 };
 
 #endif

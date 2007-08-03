@@ -7,6 +7,13 @@
 
 #pragma comment(lib, "d3d9")
 
+#include <gl/gl.h>
+#include <gl/glu.h>
+
+#pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "glu32.lib")
+#pragma comment(lib, "glaux.lib")
+
 #define _PIRATE_USE_D3DX_MATH_
 
 //! define a break macro for debugging.
@@ -16,5 +23,8 @@
 #else 
 #define _PIRATE_DEBUG_BREAK_IF( _CONDITION_ )
 #endif
+
+#include "SmartPointer.h"
+#include "BaseTypes.h"
 
 #endif
