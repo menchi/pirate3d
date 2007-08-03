@@ -175,6 +175,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\Canvas.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\D3D9Driver.cpp"
 				>
 			</File>
@@ -193,6 +197,14 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\BaseTypes.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Canvas.h"
+				>
+			</File>
+			<File
 				RelativePath=".\CompileConfig.h"
 				>
 			</File>
@@ -205,11 +217,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\OpenGLDriver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\OpenGLDriver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PaintTools.h"
+				>
+			</File>
+			<File
 				RelativePath=".\pirateMath.h"
 				>
 			</File>
 			<File
+				RelativePath=".\SmartPointer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\vector3d.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VideoDriver.h"
 				>
 			</File>
 		</Filter>

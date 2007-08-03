@@ -1,8 +1,9 @@
 #include "D3D9Driver.h"
+#include "Canvas.h"
 #include <iostream>
 
 D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
-: m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen),
+: m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen), m_BackgroundColor(0),
   m_pID3D9(Direct3DCreate9(D3D_SDK_VERSION), false)
 {
 	if (!m_pID3D9)
@@ -40,19 +41,36 @@ D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 		std::cerr<<"Error create d3d9 device"<<std::endl;
 	}
 	 
-	m_pID3DDevice = IDirect3DDevice9SharedPtr(pID3DDevice, false);
+	m_pID3DDevice = IDirect3DDevice9Ptr(pID3DDevice, false);
+}
 
+VideoDriverPtr D3D9Driver::CreateVideoDriver(HWND window, int width, int height, bool fullScreen)
+{
+	VideoDriverPtr pDriver(new D3D9Driver(window, width, height, fullScreen));
 	IDirect3DSurface9* pBackBuffer;
-	m_pID3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
-	m_pCanvas = CanvasSharedPtr(new Canvas(VideoDriverSharedPtr(this, null_deleter()), IDirect3DSurface9SharedPtr(pBackBuffer, false)));
+	pDriver->m_pID3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
+	pDriver->m_pCanvas.reset(new Canvas(pDriver, IDirect3DSurface9Ptr(pBackBuffer, false)));
+
+	return pDriver;
 }
 
-D3D9Driver::~D3D9Driver()
+void D3D9Driver::Clear(bool color, bool z, bool stencil)
 {
-	std::clog << "VideoDriver destruct" << std::endl;
+	DWORD flag = 0;
+	flag = (color)? flag | D3DCLEAR_TARGET : flag;
+	flag = (z)? flag | D3DCLEAR_ZBUFFER : flag;
+	flag = (stencil)? flag | D3DCLEAR_STENCIL : flag;
+	m_pID3DDevice->Clear(0, 0, flag, m_BackgroundColor, 1, 0);
 }
 
-CanvasSharedPtr D3D9Driver::GetCanvas()
+void D3D9Driver::SetViewport(int x, int y, int w, int h)
 {
-	return m_pCanvas;
+	D3DVIEWPORT9 vp;
+	vp.X      = x;
+	vp.Y      = y;
+	vp.Width  = w;
+	vp.Height = h;
+	vp.MinZ   = 0.0f;
+	vp.MaxZ   = 1.0f;
+	m_pID3DDevice->SetViewport(&vp);
 }
