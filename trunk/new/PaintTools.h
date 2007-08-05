@@ -29,7 +29,7 @@ private:
 	Colorf m_Color;
 };
 
-class Eraser {
+class Eraser : public PaintTool {
 public:
 	Eraser() : m_bColor(true), m_bZ(true), m_bStencil(true) {}
 	Eraser(bool color, bool z, bool stencil) : m_bColor(color), m_bZ(true), m_bStencil(stencil) {}
