@@ -12,7 +12,8 @@ FWD_DECLARE(D3D9Driver);
 
 class D3D9Driver {
 public:
-	TYPE_DEFINE_WITH_SMART_PTR(IDirect3DSurface9, RenderTargetType);
+	typedef IDirect3DSurface9 RenderTargetType;
+	DEFINE_SMART_PTR(RenderTargetType)
 
 	CanvasPtr GetCanvas() { return m_pCanvas; }
 

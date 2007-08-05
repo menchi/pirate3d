@@ -47,9 +47,7 @@ D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 VideoDriverPtr D3D9Driver::CreateVideoDriver(HWND window, int width, int height, bool fullScreen)
 {
 	VideoDriverPtr pDriver(new D3D9Driver(window, width, height, fullScreen));
-	IDirect3DSurface9* pBackBuffer;
-	pDriver->m_pID3DDevice->GetBackBuffer(0, 0, D3DBACKBUFFER_TYPE_MONO, &pBackBuffer);
-	pDriver->m_pCanvas.reset(new Canvas(pDriver, IDirect3DSurface9Ptr(pBackBuffer, false)));
+	pDriver->m_pCanvas.reset(new Canvas(pDriver));
 
 	return pDriver;
 }

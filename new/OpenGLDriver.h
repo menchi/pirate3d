@@ -8,8 +8,6 @@ FWD_DECLARE(OpenGLDriver)
 
 class OpenGLDriver {
 public:
-	TYPE_DEFINE_WITH_SMART_PTR(HDC, RenderTargetType);
-
 	CanvasPtr GetCanvas() { return m_pCanvas; }
 
 	void SetBackgroundColor(Colorf color) { glClearColor(color.r, color.g, color.b, color.a); }
