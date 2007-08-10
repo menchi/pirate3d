@@ -1,4 +1,5 @@
 #include "DeviceWin32.h"
+#include "MeshBuffer.h"
 #include <crtdbg.h>
 
 void main()
@@ -6,6 +7,9 @@ void main()
 #if defined(DEBUG) | defined(_DEBUG)
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
+
+	MyVertex v;
+	v._2[0] = 1.f;
 
 	DeviceWin32 Device(640, 480);
 

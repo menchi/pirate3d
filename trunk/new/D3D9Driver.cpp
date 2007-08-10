@@ -2,9 +2,11 @@
 #include "Canvas.h"
 #include <iostream>
 
+#ifdef _PIRATE_COMPILE_WITH_D3D9_
+
 D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 : m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen), m_BackgroundColor(0),
-  m_pID3D9(Direct3DCreate9(D3D_SDK_VERSION), false)
+  m_pID3D9(Direct3DCreate9(D3D_SDK_VERSION))
 {
 	if (!m_pID3D9)
 	{
@@ -44,6 +46,12 @@ D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 	m_pID3DDevice = IDirect3DDevice9Ptr(pID3DDevice, false);
 }
 
+D3D9Driver::~D3D9Driver()
+{
+	if (m_pID3D9->Release() > 0)
+		std::cerr << "Some D3D object not released" << std::endl;
+}
+
 VideoDriverPtr D3D9Driver::CreateVideoDriver(HWND window, int width, int height, bool fullScreen)
 {
 	VideoDriverPtr pDriver(new D3D9Driver(window, width, height, fullScreen));
@@ -72,3 +80,15 @@ void D3D9Driver::SetViewport(int x, int y, int w, int h)
 	vp.MaxZ   = 1.0f;
 	m_pID3DDevice->SetViewport(&vp);
 }
+
+VertexBufferPtr D3D9Driver::CreateVertexBuffer(int size)
+{
+	return VertexBufferPtr(new VertexBuffer(m_pID3DDevice, size));
+}
+
+IndexBufferPtr D3D9Driver::CreateIndexBuffer(int size)
+{
+	return IndexBufferPtr(new IndexBuffer(m_pID3DDevice, size));
+}
+
+#endif
