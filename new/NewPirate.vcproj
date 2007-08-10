@@ -190,6 +190,10 @@
 				RelativePath=".\Main.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\OpenGLDriver.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -217,7 +221,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\OpenGLDriver.cpp"
+				RelativePath=".\MeshBuffer.h"
 				>
 			</File>
 			<File

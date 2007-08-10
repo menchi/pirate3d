@@ -63,7 +63,7 @@ DeviceWin32::DeviceWin32(int width, int height)
 	ShowWindow(m_HWnd , SW_SHOW);
 	UpdateWindow(m_HWnd);
 
-	m_pVideoDriver = D3D9Driver::CreateVideoDriver(m_HWnd, width, height, false);
+	m_pVideoDriver = VideoDriver::CreateVideoDriver(m_HWnd, width, height, false);
 }
 
 DeviceWin32::~DeviceWin32()

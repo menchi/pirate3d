@@ -14,7 +14,7 @@ public:
 		return (*op)(*this);
 	}
 
-	Canvas& operator << (const PaintTool& tool)
+	template<class T> Canvas& operator << (const T& tool)
 	{
 		tool.Use(m_pVideoDriver.lock());
 		return *this;

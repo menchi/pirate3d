@@ -1,8 +1,11 @@
 #include "OpenGLDriver.h"
+#include "Canvas.h"
 #include <iostream>
 
+#ifdef _PIRATE_COMPILE_WITH_OPENGL_
+
 OpenGLDriver::OpenGLDriver(HWND window, int width, int height, bool fullScreen)
-: m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen)
+: m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen), m_Window(window)
 {
 	PIXELFORMATDESCRIPTOR pfd =											// pfd Tells Windows How We Want Things To Be
 	{
@@ -37,17 +40,25 @@ OpenGLDriver::OpenGLDriver(HWND window, int width, int height, bool fullScreen)
 	if (SetPixelFormat(m_hDC, PixelFormat, &pfd) == FALSE)
 		std::cerr << "Failed to set pixel format" << std::endl;
 
-	HGLRC hRC = wglCreateContext(m_hDC);
-	if (!hRC)
+	m_hRC = wglCreateContext(m_hDC);
+	if (!m_hRC)
 		std::cerr << "Failed to create rendering context" << std::endl;
 
-	if (wglMakeCurrent (m_hDC, hRC) == FALSE)
+	if (wglMakeCurrent (m_hDC, m_hRC) == FALSE)
 		std::cerr << "Failed to bind rendering context" << std::endl;
+}
+
+OpenGLDriver::~OpenGLDriver()
+{
+	wglMakeCurrent(m_hDC, 0);
+	wglDeleteContext(m_hRC);
+	ReleaseDC(m_Window, m_hDC);
 }
 
 OpenGLDriverPtr OpenGLDriver::CreateVideoDriver(HWND window, int width, int height, bool fullScreen)
 {
 	OpenGLDriverPtr pDriver(new OpenGLDriver(window, width, height, fullScreen));
+	pDriver->m_pCanvas.reset(new Canvas(pDriver));
 
 	return pDriver;
 }
@@ -64,4 +75,8 @@ void OpenGLDriver::Clear(bool color, bool z, bool stencil)
 void OpenGLDriver::SetViewport(int x, int y, int w, int h)
 {
 	glViewport(x, y, w, h);
+	glScissor(x, y, w, h);
+	glEnable(GL_SCISSOR_TEST);
 }
+
+#endif

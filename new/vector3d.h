@@ -3,8 +3,8 @@
 
 #include "pirateMath.h"
 
-namespace Pirate
-{
+//namespace Pirate
+//{
 
 //! 3d vector template class with lots of operators and methods.
 template <class T>
@@ -158,6 +158,7 @@ public:
 
 //! Typedef for a f32 3d vector.
 typedef vector3dx vector3df;
+typedef D3DXVECTOR2 vector2df;
 
 #else
 
@@ -168,6 +169,6 @@ typedef vector3d<int> vector3di;
 
 #endif
 
-} // end namespace
+//} // end namespace
 
 #endif
