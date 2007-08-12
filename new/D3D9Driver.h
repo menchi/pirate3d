@@ -40,7 +40,7 @@ private:
 	bool m_bIsFullScreen;
 	D3DCOLOR m_BackgroundColor;
 
-	IDirect3D9* m_pID3D9;
+	IDirect3D9Ptr m_pID3D9;
 	IDirect3DDevice9Ptr m_pID3DDevice;
 
 	CanvasPtr m_pCanvas;

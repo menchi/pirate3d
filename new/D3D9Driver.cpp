@@ -48,8 +48,6 @@ D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 
 D3D9Driver::~D3D9Driver()
 {
-	if (m_pID3D9->Release() > 0)
-		std::cerr << "Some D3D object not released" << std::endl;
 }
 
 VideoDriverPtr D3D9Driver::CreateVideoDriver(HWND window, int width, int height, bool fullScreen)

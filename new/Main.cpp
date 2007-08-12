@@ -1,6 +1,10 @@
 #include "DeviceWin32.h"
-#include "MeshBuffer.h"
 #include <crtdbg.h>
+
+using namespace boost::mpl;
+
+std::list<unsigned short> TempSizes;
+std::vector<VertexElement> TempElements;
 
 void main()
 {
@@ -8,8 +12,10 @@ void main()
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-	MyVertex v;
-	v._2[0] = 1.f;
+	typedef GenVertexFormat<list<POSITION<float,3>, NORMAL<float,3>, TEXCOORD<float,2> >, Holder> MyVertexFormat;
+	MyVertexFormat v;
+	Field<POSITION<float,3> >(v).v[2] = 1.23f;
+	int s = sizeof(MyVertexFormat);
 
 	DeviceWin32 Device(640, 480);
 
