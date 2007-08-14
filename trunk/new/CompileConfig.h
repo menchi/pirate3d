@@ -6,24 +6,7 @@
 #define _PIRATE_COMPILE_WITH_D3D9_
 //#define _PIRATE_COMPILE_WITH_OPENGL_
 
-#ifdef _PIRATE_COMPILE_WITH_D3D9_
-#include <d3d9.h>
-
-#pragma comment(lib, "d3d9")
-#elif defined(_PIRATE_COMPILE_WITH_OPENGL_)
-#include <gl/gl.h>
-#include <gl/glu.h>
-
-#pragma comment(lib, "opengl32.lib")
-#pragma comment(lib, "glu32.lib")
-#pragma comment(lib, "glaux.lib")
-#endif
-
 #define _PIRATE_USE_D3DX_MATH_
-
-#ifdef _PIRATE_USE_D3DX_MATH_
-#include <d3dx9.h>
-#endif
 
 //! define a break macro for debugging.
 #if defined(_DEBUG)

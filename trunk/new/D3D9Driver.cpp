@@ -79,14 +79,19 @@ void D3D9Driver::SetViewport(int x, int y, int w, int h)
 	m_pID3DDevice->SetViewport(&vp);
 }
 
-VertexBufferPtr D3D9Driver::CreateVertexBuffer(int size)
+DriverVertexBufferPtr D3D9Driver::CreateVertexBuffer(int size)
 {
-	return VertexBufferPtr(new VertexBuffer(m_pID3DDevice, size));
+	return DriverVertexBufferPtr(new DriverVertexBuffer(m_pID3DDevice, size));
 }
 
-IndexBufferPtr D3D9Driver::CreateIndexBuffer(int size)
+DriverIndexBufferPtr D3D9Driver::CreateIndexBuffer(int size)
 {
-	return IndexBufferPtr(new IndexBuffer(m_pID3DDevice, size));
+	return DriverIndexBufferPtr(new DriverIndexBuffer(m_pID3DDevice, size));
+}
+
+DriverVertexDeclarationPtr D3D9Driver::CreateVertexDeclaration(MeshBufferPtr pMeshBuffer)
+{
+	return DriverVertexDeclarationPtr(new DriverVertexDeclaration(m_pID3DDevice, pMeshBuffer));
 }
 
 #endif
