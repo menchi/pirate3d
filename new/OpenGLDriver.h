@@ -5,6 +5,12 @@
 
 #ifdef _PIRATE_COMPILE_WITH_OPENGL_
 
+#include <gl/gl.h>
+#include <gl/glu.h>
+
+#pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "glu32.lib")
+
 FWD_DECLARE(Canvas)
 FWD_DECLARE(OpenGLDriver)
 TYPE_DEFINE_WITH_SMART_PTR(OpenGLDriver, VideoDriver)
