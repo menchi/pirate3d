@@ -14,6 +14,7 @@ IndexBufferPtr IndexBuffer::Create(unsigned int NumIndices)
 {
 	IndexBufferPtr pIB(new IndexBuffer);
 	pIB->m_pBuffer = new unsigned int[NumIndices];
+	pIB->m_uiSize = sizeof(unsigned int) * NumIndices;
 
 	return pIB;
 }

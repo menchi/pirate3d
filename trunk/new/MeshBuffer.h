@@ -26,6 +26,7 @@ public:
 		VertexBufferPtr pVB(new VertexBuffer);
 		pVB->m_pBuffer = malloc(sizeof(T) * NumVertices);
 		pVB->m_pVertexElement = T::VertexFormat;
+		pVB->m_uiSize = sizeof(T) * NumVertices;
 
 		return pVB;
 	}
@@ -64,12 +65,13 @@ public:
 	StreamIndexVertexBufferPair GetVertexBuffer(unsigned int i)	{ return m_VertexBuffers[i]; }
 	unsigned int GetNumVertexBuffers() const { return (unsigned int)m_VertexBuffers.size();	}
 
+	void CreateDriverResources(VideoDriverPtr pDriver);
+
 	static MeshBufferPtr Create(VertexBufferPtr* ppVertexBuffers, unsigned short* pStreamIndices, unsigned int NumVertexBuffers, IndexBufferPtr pIndexBuffer);
 
 private:
 	MeshBuffer() {};
 
-	void CreateDriverResources(VideoDriverPtr pDriver);
 	void CommitVertexBuffers();
 	void CommitIndexBuffer();
 

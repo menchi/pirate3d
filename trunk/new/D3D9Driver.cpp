@@ -107,14 +107,19 @@ DriverVertexDeclarationPtr D3D9Driver::CreateVertexDeclaration(MeshBufferPtr pMe
 bool D3D9Driver::CreateVertexShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, VertexShaderFragmentPtr* ppFragments, 
 													 unsigned int NumFragments)
 {
-	if (!m_LoadedShaderSources.insert(std::string(FileName)).second)
-		return false;
+	if (m_LoadedShaderSources.insert(std::string(FileName)).second)
+	{
+		ID3DXBuffer* pCompiledBuffer, *pMsgBuffer;
+		if (FAILED(D3DXGatherFragmentsFromFileA(FileName, NULL, NULL, 0, &pCompiledBuffer, &pMsgBuffer)))
+		{
+			char* pMsg = (char*)pMsgBuffer->GetBufferPointer();
+			std::cerr<<pMsg<<std::endl;
+			pMsgBuffer->Release();
+			return false;
+		}
+		m_pFragmentLinker->AddFragments((DWORD*)pCompiledBuffer->GetBufferPointer());
+	}
 
-	ID3DXBuffer* pD3DXBuffer;
-	if (FAILED(D3DXGatherFragmentsFromFileA(FileName, NULL, NULL, 0, &pD3DXBuffer, NULL)))
-		return false;
-
-	m_pFragmentLinker->AddFragments((DWORD*)pD3DXBuffer->GetBufferPointer());
 	for (unsigned int i=0; i<NumFragments; ++i)
 		ppFragments[i].reset(new VertexShaderFragment(m_pFragmentLinker.get(), ppFragmentNames[i]));
 
@@ -124,14 +129,19 @@ bool D3D9Driver::CreateVertexShaderFragmentsFromFile(const char* FileName, const
 bool D3D9Driver::CreatePixelShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, PixelShaderFragmentPtr* ppFragments, 
 													unsigned int NumFragments)
 {
-	if (!m_LoadedShaderSources.insert(std::string(FileName)).second)
-		return false;
+	if (m_LoadedShaderSources.insert(std::string(FileName)).second)
+	{
+		ID3DXBuffer* pCompiledBuffer, *pMsgBuffer;
+		if (FAILED(D3DXGatherFragmentsFromFileA(FileName, NULL, NULL, 0, &pCompiledBuffer, &pMsgBuffer)))
+		{
+			char* pMsg = (char*)pMsgBuffer->GetBufferPointer();
+			std::cerr<<pMsg<<std::endl;
+			pMsgBuffer->Release();
+			return false;
+		}
+		m_pFragmentLinker->AddFragments((DWORD*)pCompiledBuffer->GetBufferPointer());
+	}
 
-	ID3DXBuffer* pD3DXBuffer;
-	if (FAILED(D3DXGatherFragmentsFromFileA(FileName, NULL, NULL, 0, &pD3DXBuffer, NULL)))
-		return false;
-
-	m_pFragmentLinker->AddFragments((DWORD*)pD3DXBuffer->GetBufferPointer());
 	for (unsigned int i=0; i<NumFragments; ++i)
 		ppFragments[i].reset(new PixelShaderFragment(m_pFragmentLinker.get(), ppFragmentNames[i]));
 
@@ -146,6 +156,11 @@ VertexShaderPtr D3D9Driver::CreateVertexShader(VertexShaderFragmentPtr* ppFragme
 PixelShaderPtr D3D9Driver::CreatePixelShader(PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments)
 {
 	return PixelShaderPtr(new PixelShader(m_pFragmentLinker.get(), ppFragments, NumFragments));
+}
+
+ShaderProgramPtr D3D9Driver::CreateShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader)
+{
+	return ShaderProgramPtr(new ShaderProgram(pVertexShader, pPixelShader));
 }
 
 #endif
