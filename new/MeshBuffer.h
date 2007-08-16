@@ -2,16 +2,19 @@
 #define _PIRATE_MESH_BUFFER_H_
 
 #include "VertexFormat.h"
+#include "VideoDriver.h"
 #include <vector>
 
 FWD_DECLARE(VertexBuffer)
+FWD_DECLARE(IndexBuffer)
+FWD_DECLARE(MeshBuffer)
 
 class VertexBuffer {
 public:
-	~VertexBuffer()
-	{
-		if (m_pBuffer) free(m_pBuffer);
-	}
+	~VertexBuffer();
+
+	const VertexElement* GetVertexElement() const {	return m_pVertexElement; }
+	const unsigned int GetSize() const { return m_uiSize; }
 
 	template<class T> T* GetBufferPtr()
 	{
@@ -27,92 +30,54 @@ public:
 		return pVB;
 	}
 
-	const VertexElement* GetVertexElement() const
-	{
-		return m_pVertexElement;
-	}
-
 private:
-	VertexBuffer() : m_pBuffer(0), m_pVertexElement(0) {};
+	VertexBuffer() : m_uiSize(0), m_pBuffer(0), m_pVertexElement(0) {};
 
+	unsigned int m_uiSize;
 	void* m_pBuffer;
 	VertexElement* m_pVertexElement;
 };
 
-FWD_DECLARE(IndexBuffer)
-
 class IndexBuffer {
 public:
-	~IndexBuffer()
-	{
-		delete[] m_pBuffer;
-	}
+	~IndexBuffer();
 
+	const unsigned int GetSize() const { return m_uiSize; }
 	unsigned int* GetBufferPtr() { return m_pBuffer; }
 
-	static IndexBufferPtr Create(unsigned int NumIndices)
-	{
-		IndexBufferPtr pIB(new IndexBuffer);
-		pIB->m_pBuffer = new unsigned int[NumIndices];
-
-		return pIB;
-	}
+	static IndexBufferPtr Create(unsigned int NumIndices);
 
 private:
-	IndexBuffer() : m_pBuffer(0) {}
+	IndexBuffer() : m_uiSize(0), m_pBuffer(0) {}
 
+	unsigned int m_uiSize;
 	unsigned int* m_pBuffer;
 };
-
-FWD_DECLARE(MeshBuffer)
 
 class MeshBuffer {
 public:
 	typedef std::pair<unsigned short, VertexBufferPtr> StreamIndexVertexBufferPair;
 	typedef std::vector<StreamIndexVertexBufferPair> VertexBufferArray;
+	typedef std::vector<DriverVertexBufferPtr> DriverVertexBufferArray;
 
-	unsigned int SetVertexBuffer(VertexBufferPtr pVertexBuffer, unsigned int StreamIndex)
-	{
-		const unsigned int n = (unsigned int)m_VertexBuffers.size();
-		for (unsigned int i=0; i<n; ++i)
-		{
-			if (m_VertexBuffers[i].first == StreamIndex)
-			{
-				m_VertexBuffers[i].second = pVertexBuffer;
-				return i;
-			}
-		}
+	unsigned int SetVertexBuffer(VertexBufferPtr pVertexBuffer, unsigned int StreamIndex);
+	StreamIndexVertexBufferPair GetVertexBuffer(unsigned int i)	{ return m_VertexBuffers[i]; }
+	unsigned int GetNumVertexBuffers() const { return (unsigned int)m_VertexBuffers.size();	}
 
-		m_VertexBuffers.push_back(std::make_pair(StreamIndex, pVertexBuffer));
-		return n;
-	}
-
-	StreamIndexVertexBufferPair GetVertexBuffer(unsigned int i)
-	{
-		return m_VertexBuffers[i];
-	}
-
-	unsigned int GetNumVertexBuffers() const
-	{
-		return (unsigned int)m_VertexBuffers.size();
-	}
-
-	static MeshBufferPtr Create(VertexBufferPtr* ppVertexBuffers, unsigned short* pStreamIndices, unsigned int NumVertexBuffers, IndexBufferPtr pIndexBuffer)
-	{
-		MeshBufferPtr pMB = MeshBufferPtr(new MeshBuffer);
-		for (unsigned int i=0; i<NumVertexBuffers; ++i)
-			pMB->m_VertexBuffers.push_back(std::make_pair(pStreamIndices[i], ppVertexBuffers[i]));
-
-		pMB->m_pIndexBuffer = pIndexBuffer;
-
-		return pMB;
-	}
+	static MeshBufferPtr Create(VertexBufferPtr* ppVertexBuffers, unsigned short* pStreamIndices, unsigned int NumVertexBuffers, IndexBufferPtr pIndexBuffer);
 
 private:
 	MeshBuffer() {};
 
+	void CreateDriverResources(VideoDriverPtr pDriver);
+	void CommitVertexBuffers();
+	void CommitIndexBuffer();
+
 	VertexBufferArray m_VertexBuffers;
 	IndexBufferPtr m_pIndexBuffer;
+
+	DriverVertexBufferArray m_DriverVertexBuffers;
+	DriverIndexBufferPtr m_pDriverIndexBuffer;
 };
 
 #endif
