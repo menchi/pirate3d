@@ -1,8 +1,10 @@
+#include "CompileConfig.h"
+
+#ifdef _PIRATE_COMPILE_WITH_D3D9_
+
 #include "D3D9Driver.h"
 #include "Canvas.h"
 #include <iostream>
-
-#ifdef _PIRATE_COMPILE_WITH_D3D9_
 
 D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 : m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen), m_BackgroundColor(0),
@@ -44,6 +46,14 @@ D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 	}
 	 
 	m_pID3DDevice = IDirect3DDevice9Ptr(pID3DDevice, false);
+
+	ID3DXFragmentLinker* pFragmentLinker;
+	if (FAILED(D3DXCreateFragmentLinker(m_pID3DDevice.get(), 0, &pFragmentLinker)))
+	{
+		std::cerr<<"Error create fragment linker"<<std::endl;
+	}
+
+	m_pFragmentLinker = ID3DXFragmentLinkerPtr(pFragmentLinker, false);
 }
 
 D3D9Driver::~D3D9Driver()
@@ -92,6 +102,50 @@ DriverIndexBufferPtr D3D9Driver::CreateIndexBuffer(int size)
 DriverVertexDeclarationPtr D3D9Driver::CreateVertexDeclaration(MeshBufferPtr pMeshBuffer)
 {
 	return DriverVertexDeclarationPtr(new DriverVertexDeclaration(m_pID3DDevice, pMeshBuffer));
+}
+
+bool D3D9Driver::CreateVertexShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, VertexShaderFragmentPtr* ppFragments, 
+													 unsigned int NumFragments)
+{
+	if (!m_LoadedShaderSources.insert(std::string(FileName)).second)
+		return false;
+
+	ID3DXBuffer* pD3DXBuffer;
+	if (FAILED(D3DXGatherFragmentsFromFileA(FileName, NULL, NULL, 0, &pD3DXBuffer, NULL)))
+		return false;
+
+	m_pFragmentLinker->AddFragments((DWORD*)pD3DXBuffer->GetBufferPointer());
+	for (unsigned int i=0; i<NumFragments; ++i)
+		ppFragments[i].reset(new VertexShaderFragment(m_pFragmentLinker.get(), ppFragmentNames[i]));
+
+	return true;
+}
+
+bool D3D9Driver::CreatePixelShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, PixelShaderFragmentPtr* ppFragments, 
+													unsigned int NumFragments)
+{
+	if (!m_LoadedShaderSources.insert(std::string(FileName)).second)
+		return false;
+
+	ID3DXBuffer* pD3DXBuffer;
+	if (FAILED(D3DXGatherFragmentsFromFileA(FileName, NULL, NULL, 0, &pD3DXBuffer, NULL)))
+		return false;
+
+	m_pFragmentLinker->AddFragments((DWORD*)pD3DXBuffer->GetBufferPointer());
+	for (unsigned int i=0; i<NumFragments; ++i)
+		ppFragments[i].reset(new PixelShaderFragment(m_pFragmentLinker.get(), ppFragmentNames[i]));
+
+	return true;
+}
+
+VertexShaderPtr D3D9Driver::CreateVertexShader(VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments)
+{
+	return VertexShaderPtr(new VertexShader(m_pFragmentLinker.get(), ppFragments, NumFragments));
+}
+
+PixelShaderPtr D3D9Driver::CreatePixelShader(PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments)
+{
+	return PixelShaderPtr(new PixelShader(m_pFragmentLinker.get(), ppFragments, NumFragments));
 }
 
 #endif

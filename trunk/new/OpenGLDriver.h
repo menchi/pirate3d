@@ -3,8 +3,6 @@
 
 #include "CompileConfig.h"
 
-#ifdef _PIRATE_COMPILE_WITH_OPENGL_
-
 #include <gl/gl.h>
 #include <gl/glu.h>
 
@@ -39,7 +37,5 @@ private:
 
 	CanvasPtr m_pCanvas;
 };
-
-#endif
 
 #endif

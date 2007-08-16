@@ -1,8 +1,10 @@
+#include "CompileConfig.h"
+
+#ifdef _PIRATE_COMPILE_WITH_OPENGL_
+
 #include "OpenGLDriver.h"
 #include "Canvas.h"
 #include <iostream>
-
-#ifdef _PIRATE_COMPILE_WITH_OPENGL_
 
 OpenGLDriver::OpenGLDriver(HWND window, int width, int height, bool fullScreen)
 : m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen), m_Window(window)

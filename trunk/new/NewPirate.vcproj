@@ -183,6 +183,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MeshBuffer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MeshBuffer.h"
 				>
 			</File>
