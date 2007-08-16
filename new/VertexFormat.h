@@ -154,6 +154,8 @@ struct POSITION {
 		(NumElement == 3)? D3DDECLTYPE_FLOAT3: D3DDECLTYPE_FLOAT4};
 	enum { Usage = DECLUSAGE_POSITION };
 	T v[Count];
+
+	T& operator[] (unsigned int i) { return v[i]; }
 };
 
 template<typename T = float, unsigned int Count = 3, unsigned int Index = 0>
@@ -166,6 +168,8 @@ struct NORMAL {
 		(NumElement == 3)? D3DDECLTYPE_FLOAT3: D3DDECLTYPE_FLOAT4};
 	enum { Usage = DECLUSAGE_NORMAL };
 	T v[Count];
+
+	T& operator[] (unsigned int i) { return v[i]; }
 };
 
 template<typename T = float, unsigned int Count = 2, unsigned int Index = 0>
@@ -178,6 +182,8 @@ struct TEXCOORD {
 		(NumElement == 3)? D3DDECLTYPE_FLOAT3: D3DDECLTYPE_FLOAT4};
 	enum { Usage = DECLUSAGE_TEXCOORD };
 	T v[Count];
+
+	T& operator[] (unsigned int i) { return v[i]; }
 };
 
 template<typename T = float, unsigned int Count = 4, unsigned int Index = 0>
@@ -190,6 +196,8 @@ struct COLOR {
 		(NumElement == 3)? D3DDECLTYPE_FLOAT3: D3DDECLTYPE_FLOAT4};
 	enum { Usage = DECLUSAGE_COLOR };
 	T v[Count];
+
+	T& operator[] (unsigned int i) { return v[i]; }
 };
 
 #endif
