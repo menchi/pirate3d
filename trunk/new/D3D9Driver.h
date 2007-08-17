@@ -16,9 +16,9 @@ public:
 
 	CanvasPtr GetCanvas() { return m_pCanvas; }
 
-	DriverVertexBufferPtr CreateVertexBuffer(int size);
-	DriverIndexBufferPtr CreateIndexBuffer(int size);
-	DriverVertexDeclarationPtr CreateVertexDeclaration(MeshBufferPtr pMeshBuffer);
+	DriverVertexBufferPtr CreateVertexBuffer(unsigned int NumVertices, unsigned int VertexSize);
+	DriverIndexBufferPtr CreateIndexBuffer(unsigned int NumIndices);
+	DriverVertexDeclarationPtr CreateVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers);
 
 	bool CreateVertexShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments);
 	bool CreatePixelShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments);
@@ -27,8 +27,12 @@ public:
 	ShaderProgramPtr CreateShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader);
 
 	void SetBackgroundColor(Colorf color) { m_BackgroundColor = D3DCOLOR_COLORVALUE(color.r, color.g, color.b, color.a); }
-	void Clear(bool color, bool z, bool stencil);
 	void SetViewport(int x, int y, int w, int h);
+	void SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclaration);
+	void SetVertexStream(unsigned int StreamNumber, DriverVertexBufferPtr pVertexBuffer, unsigned int Stride);
+	void DrawIndexedTriangleList(DriverIndexBufferPtr pIndexBuffer, unsigned int NumVertices, unsigned int TriangleCount);
+
+	void Clear(bool color, bool z, bool stencil);
 	void SwapBuffer() {	m_pID3DDevice->Present(NULL, NULL, NULL, NULL);	}
 
 	static D3D9DriverPtr CreateVideoDriver(HWND window, int width, int height, bool fullScreen);

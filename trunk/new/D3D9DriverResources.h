@@ -3,12 +3,12 @@
 
 #include "D3D9Wrapper.h"
 #include "SmartPointer.h"
-#include <vector>
+
+FWD_DECLARE(VertexBuffer)
 
 FWD_DECLARE(DriverVertexBuffer)
 FWD_DECLARE(DriverIndexBuffer)
 FWD_DECLARE(DriverVertexDeclaration)
-FWD_DECLARE(MeshBuffer)
 
 FWD_DECLARE(VertexShaderFragment)
 FWD_DECLARE(VertexShader)
@@ -16,14 +16,17 @@ FWD_DECLARE(PixelShaderFragment)
 FWD_DECLARE(PixelShader)
 FWD_DECLARE(ShaderProgram)
 
+typedef std::pair<unsigned short, VertexBufferPtr> StreamIndexVertexBufferPair;
+
 class DriverVertexBuffer {
 public:
 	void Fill(void* pData, unsigned int Size);
 
 private:
-	DriverVertexBuffer(IDirect3DDevice9Ptr pD3DDevice, int size);
+	DriverVertexBuffer(IDirect3DDevice9Ptr pD3DDevice, unsigned int NumVertices, unsigned int VertexSize);
 
 	IDirect3DVertexBuffer9Ptr m_pID3DVertexBuffer;
+	unsigned int m_uiVertexSize;
 
 	friend class D3D9Driver;
 };
@@ -33,7 +36,7 @@ public:
 	void Fill(void* pData, unsigned int Size);
 
 private:
-	DriverIndexBuffer(IDirect3DDevice9Ptr pD3DDevice, int size);
+	DriverIndexBuffer(IDirect3DDevice9Ptr pD3DDevice, unsigned int NumIndices);
 
 	IDirect3DIndexBuffer9Ptr m_pID3DIndexBuffer;
 
@@ -42,7 +45,7 @@ private:
 
 class DriverVertexDeclaration {
 private:
-	DriverVertexDeclaration(IDirect3DDevice9Ptr pD3DDevice, MeshBufferPtr pMeshBuffer);
+	DriverVertexDeclaration(IDirect3DDevice9Ptr pD3DDevice, StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers);
 
 	IDirect3DVertexDeclaration9Ptr m_pID3DVertexDeclaration;
 

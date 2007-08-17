@@ -14,7 +14,9 @@ public:
 	~VertexBuffer();
 
 	const VertexElement* GetVertexElement() const {	return m_pVertexElement; }
-	const unsigned int GetSize() const { return m_uiSize; }
+	const unsigned int GetNumVertexElement() const { return m_uiNumElements; }
+	const unsigned int GetNumVertices() const { return m_uiNumVertices; }
+	const unsigned int GetVertexSize() const { return m_uiVertexSize; }
 
 	template<class T> T* GetBufferPtr()
 	{
@@ -26,60 +28,65 @@ public:
 		VertexBufferPtr pVB(new VertexBuffer);
 		pVB->m_pBuffer = malloc(sizeof(T) * NumVertices);
 		pVB->m_pVertexElement = T::VertexFormat;
-		pVB->m_uiSize = sizeof(T) * NumVertices;
+		pVB->m_uiNumElements = _countof(T::VertexFormat);
+		pVB->m_uiVertexSize = sizeof(T);
+		pVB->m_uiNumVertices = NumVertices;
 
 		return pVB;
 	}
 
 private:
-	VertexBuffer() : m_uiSize(0), m_pBuffer(0), m_pVertexElement(0) {};
+	VertexBuffer() : m_uiVertexSize(0), m_uiNumVertices(0), m_pBuffer(0), m_pVertexElement(0) {};
 
-	unsigned int m_uiSize;
+	unsigned int m_uiVertexSize;
+	unsigned int m_uiNumVertices;
 	void* m_pBuffer;
 	VertexElement* m_pVertexElement;
+	unsigned int m_uiNumElements;
 };
 
 class IndexBuffer {
 public:
 	~IndexBuffer();
 
-	const unsigned int GetSize() const { return m_uiSize; }
+	const unsigned int GetNumIndices() const { return m_uiNumIndices; }
 	unsigned int* GetBufferPtr() { return m_pBuffer; }
 
 	static IndexBufferPtr Create(unsigned int NumIndices);
 
 private:
-	IndexBuffer() : m_uiSize(0), m_pBuffer(0) {}
+	IndexBuffer() : m_uiNumIndices(0), m_pBuffer(0) {}
 
-	unsigned int m_uiSize;
+	unsigned int m_uiNumIndices;
 	unsigned int* m_pBuffer;
 };
 
 class MeshBuffer {
 public:
 	typedef std::pair<unsigned short, VertexBufferPtr> StreamIndexVertexBufferPair;
-	typedef std::vector<StreamIndexVertexBufferPair> VertexBufferArray;
-	typedef std::vector<DriverVertexBufferPtr> DriverVertexBufferArray;
 
 	unsigned int SetVertexBuffer(VertexBufferPtr pVertexBuffer, unsigned int StreamIndex);
-	StreamIndexVertexBufferPair GetVertexBuffer(unsigned int i)	{ return m_VertexBuffers[i]; }
 	unsigned int GetNumVertexBuffers() const { return (unsigned int)m_VertexBuffers.size();	}
+	StreamIndexVertexBufferPair GetVertexBuffer(unsigned int i)	{ return m_VertexBuffers[i]; }
 
 	void CreateDriverResources(VideoDriverPtr pDriver);
+	void CommitVertexBuffers();
+	void CommitIndexBuffer();
 
 	static MeshBufferPtr Create(VertexBufferPtr* ppVertexBuffers, unsigned short* pStreamIndices, unsigned int NumVertexBuffers, IndexBufferPtr pIndexBuffer);
 
 private:
 	MeshBuffer() {};
 
-	void CommitVertexBuffers();
-	void CommitIndexBuffer();
+	typedef std::vector<StreamIndexVertexBufferPair> VertexBufferArray;
+	typedef std::vector<DriverVertexBufferPtr> DriverVertexBufferArray;
 
 	VertexBufferArray m_VertexBuffers;
 	IndexBufferPtr m_pIndexBuffer;
 
 	DriverVertexBufferArray m_DriverVertexBuffers;
 	DriverIndexBufferPtr m_pDriverIndexBuffer;
+	DriverVertexDeclarationPtr m_pDriverVertexDeclaration;
 };
 
 #endif

@@ -1,10 +1,10 @@
 #include "D3D9DriverResources.h"
 #include "MeshBuffer.h"
 
-DriverVertexBuffer::DriverVertexBuffer(IDirect3DDevice9Ptr pD3DDevice, int size)
+DriverVertexBuffer::DriverVertexBuffer(IDirect3DDevice9Ptr pD3DDevice, unsigned int NumVertices, unsigned int VertexSize) : m_uiVertexSize(VertexSize)
 {
 	IDirect3DVertexBuffer9* pVB;
-	pD3DDevice->CreateVertexBuffer(size, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &pVB, NULL);
+	pD3DDevice->CreateVertexBuffer(VertexSize * NumVertices, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &pVB, NULL);
 	m_pID3DVertexBuffer = IDirect3DVertexBuffer9Ptr(pVB, false);
 }
 
@@ -16,10 +16,10 @@ void DriverVertexBuffer::Fill(void* pData, unsigned int Size)
 	m_pID3DVertexBuffer->Unlock();
 }
 
-DriverIndexBuffer::DriverIndexBuffer(IDirect3DDevice9Ptr pD3DDevice, int size)
+DriverIndexBuffer::DriverIndexBuffer(IDirect3DDevice9Ptr pD3DDevice, unsigned int NumIndices)
 {
 	IDirect3DIndexBuffer9* pIB;
-	pD3DDevice->CreateIndexBuffer(size, D3DUSAGE_WRITEONLY, D3DFMT_INDEX32, D3DPOOL_DEFAULT, &pIB, NULL);
+	pD3DDevice->CreateIndexBuffer(sizeof(DWORD) * NumIndices, D3DUSAGE_WRITEONLY, D3DFMT_INDEX32, D3DPOOL_DEFAULT, &pIB, NULL);
 	m_pID3DIndexBuffer = IDirect3DIndexBuffer9Ptr(pIB, false);
 }
 
@@ -31,17 +31,19 @@ void DriverIndexBuffer::Fill(void* pData, unsigned int Size)
 	m_pID3DIndexBuffer->Unlock();
 }
 
-DriverVertexDeclaration::DriverVertexDeclaration(IDirect3DDevice9Ptr pD3DDevice, MeshBufferPtr pMeshBuffer)
+DriverVertexDeclaration::DriverVertexDeclaration(IDirect3DDevice9Ptr pD3DDevice, StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers)
 {
 	std::vector<D3DVERTEXELEMENT9> D3DElements;
-	const unsigned int n = pMeshBuffer->GetNumVertexBuffers();
-	for (unsigned int i=0; i<n; ++i)
+	for (unsigned int i=0; i<NumVertexBuffers; ++i)
 	{
-		unsigned short StreamIndex = pMeshBuffer->GetVertexBuffer(i).first;
-		VertexBufferPtr pVB = pMeshBuffer->GetVertexBuffer(i).second;
+		unsigned short StreamIndex = ppVertexBuffers[i].first;
+		VertexBufferPtr pVB = ppVertexBuffers[i].second;
 		const VertexElement* pElement = pVB->GetVertexElement();
-		D3DVERTEXELEMENT9 e = { StreamIndex, pElement->Offset, pElement->Type, 0, pElement->Usage, pElement->UsageIndex };
-		D3DElements.push_back(e);
+		for (unsigned int j=0; j<pVB->GetNumVertexElement(); ++j)
+		{
+			D3DVERTEXELEMENT9 e = { StreamIndex, pElement[j].Offset, pElement[j].Type, 0, pElement[j].Usage, pElement[j].UsageIndex };
+			D3DElements.push_back(e);
+		}
 	}
 	D3DVERTEXELEMENT9 e = D3DDECL_END();
 	D3DElements.push_back(e);

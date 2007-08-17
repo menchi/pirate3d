@@ -187,14 +187,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MeshBuffer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MeshBuffer.h"
-				>
-			</File>
-			<File
 				RelativePath=".\SmartPointer.h"
 				>
 			</File>
@@ -220,6 +212,10 @@
 			</File>
 			<File
 				RelativePath=".\D3D9DriverResources.h"
+				>
+			</File>
+			<File
+				RelativePath=".\D3D9Wrapper.cpp"
 				>
 			</File>
 			<File
@@ -252,6 +248,34 @@
 			</File>
 			<File
 				RelativePath=".\PaintTools.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Scene"
+			>
+			<File
+				RelativePath=".\Material.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Material.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MeshBuffer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MeshBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\RenderableObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\RenderableObject.h"
 				>
 			</File>
 		</Filter>

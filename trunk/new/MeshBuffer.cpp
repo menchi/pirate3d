@@ -14,7 +14,7 @@ IndexBufferPtr IndexBuffer::Create(unsigned int NumIndices)
 {
 	IndexBufferPtr pIB(new IndexBuffer);
 	pIB->m_pBuffer = new unsigned int[NumIndices];
-	pIB->m_uiSize = sizeof(unsigned int) * NumIndices;
+	pIB->m_uiNumIndices = NumIndices;
 
 	return pIB;
 }
@@ -50,22 +50,27 @@ void MeshBuffer::CreateDriverResources(VideoDriverPtr pDriver)
 {
 	const unsigned int n = (unsigned int)m_VertexBuffers.size();
 	for (unsigned int i=0; i<n; i++)
-		m_DriverVertexBuffers.push_back(pDriver->CreateVertexBuffer(m_VertexBuffers[i].second->GetSize()));
+		m_DriverVertexBuffers.push_back(pDriver->CreateVertexBuffer(m_VertexBuffers[i].second->GetNumVertices(), m_VertexBuffers[i].second->GetVertexSize()));
 
 	CommitVertexBuffers();
 
-	m_pDriverIndexBuffer = pDriver->CreateIndexBuffer(m_pIndexBuffer->GetSize());
+	m_pDriverIndexBuffer = pDriver->CreateIndexBuffer(m_pIndexBuffer->GetNumIndices());
 	CommitIndexBuffer();
+
+	m_pDriverVertexDeclaration = pDriver->CreateVertexDeclaration(&m_VertexBuffers.front(), GetNumVertexBuffers());
 }
 
 void MeshBuffer::CommitVertexBuffers()
 {
 	const unsigned int n = (unsigned int)m_VertexBuffers.size();
 	for (unsigned int i=0; i<n; i++)
-		m_DriverVertexBuffers[i]->Fill(m_VertexBuffers[i].second->GetBufferPtr<void>(), m_VertexBuffers[i].second->GetSize());
+	{
+		m_DriverVertexBuffers[i]->Fill(m_VertexBuffers[i].second->GetBufferPtr<void>(), 
+									   m_VertexBuffers[i].second->GetNumVertices() * m_VertexBuffers[i].second->GetVertexSize());
+	}
 }
 
 void MeshBuffer::CommitIndexBuffer()
 {
-	m_pDriverIndexBuffer->Fill(m_pIndexBuffer->GetBufferPtr(), m_pIndexBuffer->GetSize());
+	m_pDriverIndexBuffer->Fill(m_pIndexBuffer->GetBufferPtr(), m_pIndexBuffer->GetNumIndices() * sizeof(unsigned int));
 }
