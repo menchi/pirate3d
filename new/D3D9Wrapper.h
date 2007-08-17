@@ -29,4 +29,6 @@ template<class T> void intrusive_ptr_release(T* p)
 	p->Release();
 }
 
+void intrusive_ptr_release(IDirect3D9* p);
+
 #endif

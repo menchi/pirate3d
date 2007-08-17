@@ -8,7 +8,7 @@
 
 D3D9Driver::D3D9Driver(HWND window, int width, int height, bool fullScreen)
 : m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen), m_BackgroundColor(0),
-  m_pID3D9(Direct3DCreate9(D3D_SDK_VERSION))
+  m_pID3D9(Direct3DCreate9(D3D_SDK_VERSION), false)
 {
 	if (!m_pID3D9)
 	{
@@ -89,19 +89,19 @@ void D3D9Driver::SetViewport(int x, int y, int w, int h)
 	m_pID3DDevice->SetViewport(&vp);
 }
 
-DriverVertexBufferPtr D3D9Driver::CreateVertexBuffer(int size)
+DriverVertexBufferPtr D3D9Driver::CreateVertexBuffer(unsigned int NumVertices, unsigned int VertexSize)
 {
-	return DriverVertexBufferPtr(new DriverVertexBuffer(m_pID3DDevice, size));
+	return DriverVertexBufferPtr(new DriverVertexBuffer(m_pID3DDevice, NumVertices, VertexSize));
 }
 
-DriverIndexBufferPtr D3D9Driver::CreateIndexBuffer(int size)
+DriverIndexBufferPtr D3D9Driver::CreateIndexBuffer(unsigned int NumIndices)
 {
-	return DriverIndexBufferPtr(new DriverIndexBuffer(m_pID3DDevice, size));
+	return DriverIndexBufferPtr(new DriverIndexBuffer(m_pID3DDevice, NumIndices));
 }
 
-DriverVertexDeclarationPtr D3D9Driver::CreateVertexDeclaration(MeshBufferPtr pMeshBuffer)
+DriverVertexDeclarationPtr D3D9Driver::CreateVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers)
 {
-	return DriverVertexDeclarationPtr(new DriverVertexDeclaration(m_pID3DDevice, pMeshBuffer));
+	return DriverVertexDeclarationPtr(new DriverVertexDeclaration(m_pID3DDevice, ppVertexBuffers, NumVertexBuffers));
 }
 
 bool D3D9Driver::CreateVertexShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, VertexShaderFragmentPtr* ppFragments, 
@@ -161,6 +161,22 @@ PixelShaderPtr D3D9Driver::CreatePixelShader(PixelShaderFragmentPtr* ppFragments
 ShaderProgramPtr D3D9Driver::CreateShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader)
 {
 	return ShaderProgramPtr(new ShaderProgram(pVertexShader, pPixelShader));
+}
+
+void D3D9Driver::SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclaration)
+{
+	m_pID3DDevice->SetVertexDeclaration(pVertexDeclaration->m_pID3DVertexDeclaration.get());
+}
+
+void D3D9Driver::SetVertexStream(unsigned int StreamNumber, DriverVertexBufferPtr pVertexBuffer, unsigned int Stride)
+{
+	m_pID3DDevice->SetStreamSource(StreamNumber, pVertexBuffer->m_pID3DVertexBuffer.get(), 0, Stride);
+}
+
+void D3D9Driver::DrawIndexedTriangleList(DriverIndexBufferPtr pIndexBuffer, unsigned int NumVertices, unsigned int TriangleCount)
+{
+	m_pID3DDevice->SetIndices(pIndexBuffer->m_pID3DIndexBuffer.get());
+	m_pID3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, NumVertices, 0, TriangleCount);
 }
 
 #endif
