@@ -231,6 +231,18 @@
 				>
 			</File>
 			<File
+				RelativePath=".\OpenGLDriverResources.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\OpenGLDriverResources.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OpenGLWrapper.h"
+				>
+			</File>
+			<File
 				RelativePath=".\VideoDriver.h"
 				>
 			</File>

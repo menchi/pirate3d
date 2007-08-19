@@ -2,12 +2,7 @@
 #define _PIRATE_OPENGL_DRIVER_H_
 
 #include "CompileConfig.h"
-
-#include <gl/gl.h>
-#include <gl/glu.h>
-
-#pragma comment(lib, "opengl32.lib")
-#pragma comment(lib, "glu32.lib")
+#include "OpenGLDriverResources.h"
 
 FWD_DECLARE(Canvas)
 FWD_DECLARE(OpenGLDriver)

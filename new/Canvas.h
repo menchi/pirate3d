@@ -20,6 +20,12 @@ public:
 		return *this;
 	}
 
+	template<class T> Canvas& operator << (const std::tr1::shared_ptr<T> tool)
+	{
+		tool->Use(m_pVideoDriver.lock());
+		return *this;
+	}
+
 private:
 	VideoDriverWeakPtr m_pVideoDriver;
 };

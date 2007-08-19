@@ -177,6 +177,14 @@ void D3D9Driver::DrawIndexedTriangleList(DriverIndexBufferPtr pIndexBuffer, unsi
 {
 	m_pID3DDevice->SetIndices(pIndexBuffer->m_pID3DIndexBuffer.get());
 	m_pID3DDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, NumVertices, 0, TriangleCount);
+	m_pID3DDevice->EndScene();
+}
+
+void D3D9Driver::SetShaderProgram(ShaderProgramPtr pShaderProgram)
+{
+	m_pID3DDevice->BeginScene();
+	m_pID3DDevice->SetVertexShader(pShaderProgram->m_pVertexShader->m_pID3DVertexShader.get());
+	m_pID3DDevice->SetPixelShader(pShaderProgram->m_pPixelShader->m_pID3DPixelShader.get());
 }
 
 #endif

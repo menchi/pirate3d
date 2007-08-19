@@ -31,6 +31,7 @@ public:
 	void SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclaration);
 	void SetVertexStream(unsigned int StreamNumber, DriverVertexBufferPtr pVertexBuffer, unsigned int Stride);
 	void DrawIndexedTriangleList(DriverIndexBufferPtr pIndexBuffer, unsigned int NumVertices, unsigned int TriangleCount);
+	void SetShaderProgram(ShaderProgramPtr pShaderProgram);
 
 	void Clear(bool color, bool z, bool stencil);
 	void SwapBuffer() {	m_pID3DDevice->Present(NULL, NULL, NULL, NULL);	}

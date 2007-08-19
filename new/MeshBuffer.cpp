@@ -49,15 +49,15 @@ MeshBufferPtr MeshBuffer::Create(VertexBufferPtr* ppVertexBuffers, unsigned shor
 void MeshBuffer::CreateDriverResources(VideoDriverPtr pDriver)
 {
 	const unsigned int n = (unsigned int)m_VertexBuffers.size();
-	for (unsigned int i=0; i<n; i++)
-		m_DriverVertexBuffers.push_back(pDriver->CreateVertexBuffer(m_VertexBuffers[i].second->GetNumVertices(), m_VertexBuffers[i].second->GetVertexSize()));
+//	for (unsigned int i=0; i<n; i++)
+//		m_DriverVertexBuffers.push_back(pDriver->CreateVertexBuffer(m_VertexBuffers[i].second->GetNumVertices(), m_VertexBuffers[i].second->GetVertexSize()));
 
 	CommitVertexBuffers();
 
-	m_pDriverIndexBuffer = pDriver->CreateIndexBuffer(m_pIndexBuffer->GetNumIndices());
+//	m_pDriverIndexBuffer = pDriver->CreateIndexBuffer(m_pIndexBuffer->GetNumIndices());
 	CommitIndexBuffer();
 
-	m_pDriverVertexDeclaration = pDriver->CreateVertexDeclaration(&m_VertexBuffers.front(), GetNumVertexBuffers());
+//	m_pDriverVertexDeclaration = pDriver->CreateVertexDeclaration(&m_VertexBuffers.front(), GetNumVertexBuffers());
 }
 
 void MeshBuffer::CommitVertexBuffers()
@@ -65,12 +65,12 @@ void MeshBuffer::CommitVertexBuffers()
 	const unsigned int n = (unsigned int)m_VertexBuffers.size();
 	for (unsigned int i=0; i<n; i++)
 	{
-		m_DriverVertexBuffers[i]->Fill(m_VertexBuffers[i].second->GetBufferPtr<void>(), 
-									   m_VertexBuffers[i].second->GetNumVertices() * m_VertexBuffers[i].second->GetVertexSize());
+//		m_DriverVertexBuffers[i]->Fill(m_VertexBuffers[i].second->GetBufferPtr<void>(), 
+//									   m_VertexBuffers[i].second->GetNumVertices() * m_VertexBuffers[i].second->GetVertexSize());
 	}
 }
 
 void MeshBuffer::CommitIndexBuffer()
 {
-	m_pDriverIndexBuffer->Fill(m_pIndexBuffer->GetBufferPtr(), m_pIndexBuffer->GetNumIndices() * sizeof(unsigned int));
+//	m_pDriverIndexBuffer->Fill(m_pIndexBuffer->GetBufferPtr(), m_pIndexBuffer->GetNumIndices() * sizeof(unsigned int));
 }

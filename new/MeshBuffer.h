@@ -64,10 +64,15 @@ private:
 class MeshBuffer {
 public:
 	typedef std::pair<unsigned short, VertexBufferPtr> StreamIndexVertexBufferPair;
+//	typedef std::pair<unsigned short, DriverVertexBufferPtr> StreamIndexDriverVertexBufferPair;
 
 	unsigned int SetVertexBuffer(VertexBufferPtr pVertexBuffer, unsigned int StreamIndex);
 	unsigned int GetNumVertexBuffers() const { return (unsigned int)m_VertexBuffers.size();	}
 	StreamIndexVertexBufferPair GetVertexBuffer(unsigned int i)	{ return m_VertexBuffers[i]; }
+//	StreamIndexDriverVertexBufferPair GetDriverVertexBuffer(unsigned int i) { return std::make_pair(m_VertexBuffers[i].first, m_DriverVertexBuffers[i]); }
+//	DriverVertexDeclarationPtr GetVertexDeclaration() { return m_pDriverVertexDeclaration; }
+//	DriverIndexBufferPtr GetDriverIndexBuffer() { return m_pDriverIndexBuffer; }
+	IndexBufferPtr GetIndexBuffer() { return m_pIndexBuffer; }
 
 	void CreateDriverResources(VideoDriverPtr pDriver);
 	void CommitVertexBuffers();
@@ -79,14 +84,14 @@ private:
 	MeshBuffer() {};
 
 	typedef std::vector<StreamIndexVertexBufferPair> VertexBufferArray;
-	typedef std::vector<DriverVertexBufferPtr> DriverVertexBufferArray;
+//	typedef std::vector<DriverVertexBufferPtr> DriverVertexBufferArray;
 
 	VertexBufferArray m_VertexBuffers;
 	IndexBufferPtr m_pIndexBuffer;
 
-	DriverVertexBufferArray m_DriverVertexBuffers;
-	DriverIndexBufferPtr m_pDriverIndexBuffer;
-	DriverVertexDeclarationPtr m_pDriverVertexDeclaration;
+//	DriverVertexBufferArray m_DriverVertexBuffers;
+//	DriverIndexBufferPtr m_pDriverIndexBuffer;
+//	DriverVertexDeclarationPtr m_pDriverVertexDeclaration;
 };
 
 #endif
