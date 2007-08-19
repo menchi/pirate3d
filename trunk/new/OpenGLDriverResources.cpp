@@ -1,10 +1,10 @@
 #include "CompileConfig.h"
 
-#ifdef _PIRATE_COMPILE_WITH_D3D9_
+#ifdef _PIRATE_COMPILE_WITH_OPENGL_
 
-#include "D3D9DriverResources.h"
+#include "OpenGLDriverResources.h"
 #include "MeshBuffer.h"
-
+/*
 DriverVertexBuffer::DriverVertexBuffer(IDirect3DDevice9Ptr pD3DDevice, unsigned int NumVertices, unsigned int VertexSize) : m_uiVertexSize(VertexSize)
 {
 	IDirect3DVertexBuffer9* pVB;
@@ -90,5 +90,6 @@ PixelShader::PixelShader(ID3DXFragmentLinker* pLinker, PixelShaderFragmentPtr* p
 ShaderProgram::ShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader) : m_pVertexShader(pVertexShader), m_pPixelShader(pPixelShader)
 {
 }
+*/
 
 #endif

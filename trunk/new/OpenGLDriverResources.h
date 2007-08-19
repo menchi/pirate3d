@@ -1,8 +1,8 @@
-#ifndef _PIRATE_D3D9_DRIVER_RESOURCES_H_
-#define _PIRATE_D3D9_DRIVER_RESOURCES_H_
+#ifndef _PIRATE_OPENGL_DRIVER_RESOURCES_H_
+#define _PIRATE_OPENGL_DRIVER_RESOURCES_H_
 
-#include "D3D9Wrapper.h"
 #include "SmartPointer.h"
+#include "OpenGLWrapper.h"
 
 FWD_DECLARE(VertexBuffer)
 
@@ -23,12 +23,12 @@ public:
 	void Fill(void* pData, unsigned int Size);
 
 private:
-	DriverVertexBuffer(IDirect3DDevice9Ptr pD3DDevice, unsigned int NumVertices, unsigned int VertexSize);
+	DriverVertexBuffer(unsigned int NumVertices, unsigned int VertexSize);
 
-	IDirect3DVertexBuffer9Ptr m_pID3DVertexBuffer;
+	GLuint m_uiVertexBufferID;
 	unsigned int m_uiVertexSize;
 
-	friend class D3D9Driver;
+	friend class OpenGLDriver;
 };
 
 class DriverIndexBuffer {
@@ -36,22 +36,20 @@ public:
 	void Fill(void* pData, unsigned int Size);
 
 private:
-	DriverIndexBuffer(IDirect3DDevice9Ptr pD3DDevice, unsigned int NumIndices);
+	DriverIndexBuffer(unsigned int NumIndices);
 
-	IDirect3DIndexBuffer9Ptr m_pID3DIndexBuffer;
+	GLuint m_uiIndexBufferID;
 
-	friend class D3D9Driver;
+	friend class OpenGLDriver;
 };
 
 class DriverVertexDeclaration {
 private:
-	DriverVertexDeclaration(IDirect3DDevice9Ptr pD3DDevice, StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers);
+	DriverVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers);
 
-	IDirect3DVertexDeclaration9Ptr m_pID3DVertexDeclaration;
-
-	friend class D3D9Driver;
+	friend class OpenGLDriver;
 };
-
+/*
 class VertexShaderFragment {
 private:
 	VertexShaderFragment(ID3DXFragmentLinker* pLinker, const char* Name);
@@ -99,5 +97,5 @@ private:
 
 	friend class D3D9Driver;
 };
-
+*/
 #endif
