@@ -5,6 +5,7 @@
 #include "OpenGLDriver.h"
 #include "Canvas.h"
 #include <iostream>
+#include <fstream>
 
 OpenGLDriver::OpenGLDriver(HWND window, int width, int height, bool fullScreen)
 : m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen), m_Window(window)
@@ -48,6 +49,11 @@ OpenGLDriver::OpenGLDriver(HWND window, int width, int height, bool fullScreen)
 
 	if (wglMakeCurrent (m_hDC, m_hRC) == FALSE)
 		std::cerr << "Failed to bind rendering context" << std::endl;
+
+	if (glewInit() != GLEW_OK)
+		std::cerr << "Failed to initialize GLEW" << std::endl;
+
+	glFrontFace(GL_CW);
 }
 
 OpenGLDriver::~OpenGLDriver()
@@ -79,6 +85,129 @@ void OpenGLDriver::SetViewport(int x, int y, int w, int h)
 	glViewport(x, y, w, h);
 	glScissor(x, y, w, h);
 	glEnable(GL_SCISSOR_TEST);
+}
+
+DriverVertexBufferPtr OpenGLDriver::CreateVertexBuffer(unsigned int NumVertices, unsigned int VertexSize)
+{
+	return DriverVertexBufferPtr(new DriverVertexBuffer(NumVertices, VertexSize));
+}
+
+DriverIndexBufferPtr OpenGLDriver::CreateIndexBuffer(unsigned int NumIndices)
+{
+	return DriverIndexBufferPtr(new DriverIndexBuffer(NumIndices));
+}
+
+DriverVertexDeclarationPtr OpenGLDriver::CreateVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers)
+{
+	return DriverVertexDeclarationPtr(new DriverVertexDeclaration(ppVertexBuffers, NumVertexBuffers));
+}
+
+bool OpenGLDriver::CreateVertexShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, VertexShaderFragmentPtr* ppFragments, 
+													   unsigned int NumFragments)
+{
+	using namespace std;
+
+	ifstream file(FileName);
+	if (!file.is_open())
+		return false;
+
+	file.seekg(0, ios::end);
+	streampos pos = file.tellg();
+	streamsize size = pos;
+	file.seekg(0);
+	string s;
+	s.resize(size+1);
+	file.read(&s[0], size);
+
+	ppFragments[0] = VertexShaderFragmentPtr(new VertexShaderFragment(s));
+	
+	return true;
+}
+
+bool OpenGLDriver::CreatePixelShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, PixelShaderFragmentPtr* ppFragments, 
+													  unsigned int NumFragments)
+{
+	using namespace std;
+
+	ifstream file(FileName);
+	if (!file.is_open())
+		return false;
+
+	file.seekg(0, ios::end);
+	streampos pos = file.tellg();
+	streamsize size = pos;
+	file.seekg(0);
+	string s;
+	s.resize(size+1);
+	file.read(&s[0], size);
+
+	ppFragments[0] = PixelShaderFragmentPtr(new PixelShaderFragment(s));
+
+	return true;
+}
+
+VertexShaderPtr OpenGLDriver::CreateVertexShader(VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments)
+{
+	return VertexShaderPtr(new VertexShader(ppFragments, NumFragments));
+}
+
+PixelShaderPtr OpenGLDriver::CreatePixelShader(PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments)
+{
+	return PixelShaderPtr(new PixelShader(ppFragments, NumFragments));
+}
+
+ShaderProgramPtr OpenGLDriver::CreateShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader)
+{
+	return ShaderProgramPtr(new ShaderProgram(pVertexShader, pPixelShader));
+}
+
+void OpenGLDriver::SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclaration)
+{
+	if (pVertexDeclaration->m_pVertex)
+		glEnableClientState(GL_VERTEX_ARRAY);
+	else
+		glDisableClientState(GL_VERTEX_ARRAY);
+
+	if (pVertexDeclaration->m_pNormal) 
+		glEnableClientState(GL_NORMAL_ARRAY);
+	else
+		glDisableClientState(GL_NORMAL_ARRAY);
+
+	if (pVertexDeclaration->m_pColor) 
+		glEnableClientState(GL_COLOR_ARRAY);
+	else
+		glDisableClientState(GL_COLOR_ARRAY);
+
+	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
+	{
+		if (pVertexDeclaration->m_ppTexCoords[i]) 
+		{
+			glClientActiveTexture(GL_TEXTURE0 + i);
+			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		}
+		else
+		{
+			glClientActiveTexture(GL_TEXTURE0 + i);
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		}
+	}
+
+	m_pCurVertexDeclaration = pVertexDeclaration;
+}
+
+void OpenGLDriver::SetVertexStream(unsigned int StreamNumber, DriverVertexBufferPtr pVertexBuffer, unsigned int Stride)
+{
+
+}
+
+void OpenGLDriver::DrawIndexedTriangleList(DriverIndexBufferPtr pIndexBuffer, unsigned int NumVertices, unsigned int TriangleCount)
+{
+
+}
+
+void OpenGLDriver::SetShaderProgram(ShaderProgramPtr pShaderProgram)
+{
+
 }
 
 #endif

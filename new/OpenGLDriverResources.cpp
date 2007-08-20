@@ -4,92 +4,144 @@
 
 #include "OpenGLDriverResources.h"
 #include "MeshBuffer.h"
-/*
-DriverVertexBuffer::DriverVertexBuffer(IDirect3DDevice9Ptr pD3DDevice, unsigned int NumVertices, unsigned int VertexSize) : m_uiVertexSize(VertexSize)
+
+DriverVertexBuffer::DriverVertexBuffer(unsigned int NumVertices, unsigned int VertexSize) : m_uiVertexSize(VertexSize)
 {
-	IDirect3DVertexBuffer9* pVB;
-	pD3DDevice->CreateVertexBuffer(VertexSize * NumVertices, D3DUSAGE_WRITEONLY, 0, D3DPOOL_DEFAULT, &pVB, NULL);
-	m_pID3DVertexBuffer = IDirect3DVertexBuffer9Ptr(pVB, false);
+	glGenBuffers(1, &m_uiVertexBufferID);
 }
 
 void DriverVertexBuffer::Fill(void* pData, unsigned int Size)
 {
-	void* pbData;
-	m_pID3DVertexBuffer->Lock(0, 0, &pbData, 0);
-	memcpy(pbData, pData, Size);
-	m_pID3DVertexBuffer->Unlock();
+	glBindBuffer(GL_ARRAY_BUFFER, m_uiVertexBufferID);
+	glBufferData(GL_ARRAY_BUFFER, Size, pData, GL_STATIC_DRAW);
 }
 
-DriverIndexBuffer::DriverIndexBuffer(IDirect3DDevice9Ptr pD3DDevice, unsigned int NumIndices)
+DriverIndexBuffer::DriverIndexBuffer(unsigned int NumIndices)
 {
-	IDirect3DIndexBuffer9* pIB;
-	pD3DDevice->CreateIndexBuffer(sizeof(DWORD) * NumIndices, D3DUSAGE_WRITEONLY, D3DFMT_INDEX32, D3DPOOL_DEFAULT, &pIB, NULL);
-	m_pID3DIndexBuffer = IDirect3DIndexBuffer9Ptr(pIB, false);
+	glGenBuffers(1, &m_uiIndexBufferID);
 }
 
 void DriverIndexBuffer::Fill(void* pData, unsigned int Size)
 {
-	void* pbData;
-	m_pID3DIndexBuffer->Lock(0, 0, &pbData, 0);
-	memcpy(pbData, pData, Size);
-	m_pID3DIndexBuffer->Unlock();
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_uiIndexBufferID);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, Size, pData, GL_STATIC_DRAW);
 }
 
-DriverVertexDeclaration::DriverVertexDeclaration(IDirect3DDevice9Ptr pD3DDevice, StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers)
+DriverVertexDeclaration::DriverVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers) :
+m_pVertex(0), m_pNormal(0), m_pColor(0)
 {
-	std::vector<D3DVERTEXELEMENT9> D3DElements;
+	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
+		m_ppTexCoords[i] = NULL;
+
 	for (unsigned int i=0; i<NumVertexBuffers; ++i)
 	{
-		unsigned short StreamIndex = ppVertexBuffers[i].first;
 		VertexBufferPtr pVB = ppVertexBuffers[i].second;
-		const VertexElement* pElement = pVB->GetVertexElement();
+		const VertexElement* pElements = pVB->GetVertexElement();
 		for (unsigned int j=0; j<pVB->GetNumVertexElement(); ++j)
 		{
-			D3DVERTEXELEMENT9 e = { StreamIndex, pElement[j].Offset, pElement[j].Type, 0, pElement[j].Usage, pElement[j].UsageIndex };
-			D3DElements.push_back(e);
+			VertexParam p;
+			switch (pElements[j].Type)
+			{
+			case DECLTYPE_FLOAT1:
+				p.Size = 1;
+				p.Type = GL_FLOAT;
+				break;
+			case DECLTYPE_FLOAT2:
+				p.Size = 2;
+				p.Type = GL_FLOAT;
+				break;
+			case DECLTYPE_FLOAT3:
+				p.Size = 2;
+				p.Type = GL_FLOAT;
+				break;
+			case DECLTYPE_FLOAT4:
+				p.Size = 4;
+				p.Type = GL_FLOAT;
+				break;
+			}
+
+			p.Stride = pVB->GetVertexSize() - sizeof(float) * p.Size;
+			p.Pointer = BufferObjectPtr(pElements[j].Offset);
+
+			switch (pElements[j].Usage)
+			{
+			case DECLUSAGE_POSITION:
+				m_pVertex = new VertexParam(p);
+				break;
+			case DECLUSAGE_NORMAL:
+				m_pNormal = new VertexParam(p);
+				break;
+			case DECLUSAGE_COLOR:
+				m_pColor = new VertexParam(p);
+				break;
+			case DECLUSAGE_TEXCOORD:
+				m_ppTexCoords[pElements[j].UsageIndex] = new VertexParam(p);
+				break;
+			}
 		}
 	}
-	D3DVERTEXELEMENT9 e = D3DDECL_END();
-	D3DElements.push_back(e);
-
-	IDirect3DVertexDeclaration9* pVD;
-	pD3DDevice->CreateVertexDeclaration(&D3DElements.front(), &pVD);
-	m_pID3DVertexDeclaration = IDirect3DVertexDeclaration9Ptr(pVD, false);
-} 
-
-VertexShaderFragment::VertexShaderFragment(ID3DXFragmentLinker* pLinker, const char* Name) : m_hD3DXFragment(pLinker->GetFragmentHandleByName(Name))
-{
 }
 
-VertexShader::VertexShader(ID3DXFragmentLinker* pLinker, VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments)
+DriverVertexDeclaration::~DriverVertexDeclaration()
 {
-	std::vector<D3DXHANDLE> handles(NumFragments);
+	if (m_pVertex) delete m_pVertex;
+	if (m_pNormal) delete m_pNormal;
+	if (m_pColor) delete m_pColor;
+	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
+		if (m_ppTexCoords[i]) delete m_ppTexCoords[i];
+}
+
+VertexShaderFragment::VertexShaderFragment(const std::string& Source) : m_uiGLVertexShader(glCreateShader(GL_VERTEX_SHADER))
+{
+	const char* pSource[1] = { {Source.c_str()} };
+	glShaderSource(m_uiGLVertexShader, 1, pSource, NULL);
+	glCompileShader(m_uiGLVertexShader);
+	PrintShaderInfoLog(m_uiGLVertexShader);
+}
+
+VertexShaderFragment::~VertexShaderFragment()
+{
+	glDeleteShader(m_uiGLVertexShader);
+}
+
+VertexShader::VertexShader(VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments) : m_Fragments(NumFragments)
+{
 	for (unsigned int i=0; i<NumFragments; ++i)
-		handles[i] = ppFragments[i]->m_hD3DXFragment;
-
-	IDirect3DVertexShader9* pVertexShader;
-	pLinker->LinkVertexShader("vs_3_0", 0, &handles.front(), NumFragments, &pVertexShader, NULL);
-	m_pID3DVertexShader = IDirect3DVertexShader9Ptr(pVertexShader, false);
+		m_Fragments[i] = ppFragments[i]->m_uiGLVertexShader;
 }
 
-PixelShaderFragment::PixelShaderFragment(ID3DXFragmentLinker* pLinker, const char* Name) : m_hD3DXFragment(pLinker->GetFragmentHandleByName(Name))
+PixelShaderFragment::PixelShaderFragment(const std::string& Source) : m_uiGLFragmentShader(glCreateShader(GL_FRAGMENT_SHADER))
 {
+	const char* pSource[1] = { {Source.c_str()} };
+	glShaderSource(m_uiGLFragmentShader, 1, pSource, NULL);
+	glCompileShader(m_uiGLFragmentShader);
+	PrintShaderInfoLog(m_uiGLFragmentShader);
 }
 
-PixelShader::PixelShader(ID3DXFragmentLinker* pLinker, PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments)
+PixelShaderFragment::~PixelShaderFragment()
 {
-	std::vector<D3DXHANDLE> handles(NumFragments);
+	glDeleteShader(m_uiGLFragmentShader);
+}
+
+PixelShader::PixelShader(PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments) : m_Fragments(NumFragments)
+{
 	for (unsigned int i=0; i<NumFragments; ++i)
-		handles[i] = ppFragments[i]->m_hD3DXFragment;
-
-	IDirect3DPixelShader9* pVertexShader;
-	pLinker->LinkPixelShader("ps_3_0", 0, &handles.front(), NumFragments, &pVertexShader, NULL);
-	m_pID3DPixelShader = IDirect3DPixelShader9Ptr(pVertexShader, false);
+		m_Fragments[i] = ppFragments[i]->m_uiGLFragmentShader;
 }
 
-ShaderProgram::ShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader) : m_pVertexShader(pVertexShader), m_pPixelShader(pPixelShader)
+ShaderProgram::ShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader) : m_uiGLShaderProgram(glCreateProgram())
 {
+	unsigned int n = (unsigned int)pVertexShader->m_Fragments.size();
+	for (unsigned int i=0; i<n; ++i)
+		glAttachShader(m_uiGLShaderProgram, pVertexShader->m_Fragments[i]);
+
+	n = (unsigned int)pPixelShader->m_Fragments.size();
+	for (unsigned int i=0; i<n; ++i)
+		glAttachShader(m_uiGLShaderProgram, pPixelShader->m_Fragments[i]);
+
+	glLinkProgram(m_uiGLShaderProgram);
+	PrintProgramInfoLog(m_uiGLShaderProgram);
 }
-*/
+
 
 #endif

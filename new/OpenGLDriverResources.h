@@ -3,6 +3,8 @@
 
 #include "SmartPointer.h"
 #include "OpenGLWrapper.h"
+#include <vector>
+#include <string>
 
 FWD_DECLARE(VertexBuffer)
 
@@ -20,6 +22,7 @@ typedef std::pair<unsigned short, VertexBufferPtr> StreamIndexVertexBufferPair;
 
 class DriverVertexBuffer {
 public:
+	~DriverVertexBuffer() { glDeleteBuffers(1, &m_uiVertexBufferID); }
 	void Fill(void* pData, unsigned int Size);
 
 private:
@@ -33,6 +36,7 @@ private:
 
 class DriverIndexBuffer {
 public:
+	~DriverIndexBuffer() { glDeleteBuffers(1, &m_uiIndexBufferID); }
 	void Fill(void* pData, unsigned int Size);
 
 private:
@@ -44,58 +48,80 @@ private:
 };
 
 class DriverVertexDeclaration {
+public:
+	~DriverVertexDeclaration();
+
 private:
 	DriverVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers);
 
+	struct VertexParam {
+		GLuint Size;
+		GLenum Type;
+		GLsizei Stride;
+		GLvoid* Pointer;
+	};
+
+	VertexParam* m_pVertex;
+	VertexParam* m_pNormal;
+	VertexParam* m_pColor;
+	VertexParam* m_ppTexCoords[MAX_TEXTURE_UNIT];
+
 	friend class OpenGLDriver;
 };
-/*
+
 class VertexShaderFragment {
+public:
+	~VertexShaderFragment();
+
 private:
-	VertexShaderFragment(ID3DXFragmentLinker* pLinker, const char* Name);
+	VertexShaderFragment(const std::string& Source);
 
-	D3DXHANDLE m_hD3DXFragment;
+	GLuint m_uiGLVertexShader;
 
-	friend class D3D9Driver;
+	friend class OpenGLDriver;
 	friend class VertexShader;
 };
 
 class VertexShader {
 private:
-	VertexShader(ID3DXFragmentLinker* pLinker, VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments);
+	VertexShader(VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments);
 
-	IDirect3DVertexShader9Ptr m_pID3DVertexShader;
+	std::vector<GLuint> m_Fragments;
 
-	friend class D3D9Driver;
+	friend class OpenGLDriver;
+	friend class ShaderProgram;
 };
 
 class PixelShaderFragment {
+public:
+	~PixelShaderFragment();
+
 private:
-	PixelShaderFragment(ID3DXFragmentLinker* pLinker, const char* Name);
+	PixelShaderFragment(const std::string& Source);
 
-	D3DXHANDLE m_hD3DXFragment;
+	GLuint m_uiGLFragmentShader;
 
-	friend class D3D9Driver;
+	friend class OpenGLDriver;
 	friend class PixelShader;
 };
 
 class PixelShader {
 private:
-	PixelShader(ID3DXFragmentLinker* pLinker, PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments);
+	PixelShader(PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments);
 
-	IDirect3DPixelShader9Ptr m_pID3DPixelShader;
+	std::vector<GLuint> m_Fragments;
 
-	friend class D3D9Driver;
+	friend class OpenGLDriver;
+	friend class ShaderProgram;
 };
 
 class ShaderProgram {
 private:
 	ShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader);
 
-	VertexShaderPtr m_pVertexShader;
-	PixelShaderPtr m_pPixelShader;
+	GLuint m_uiGLShaderProgram;
 
-	friend class D3D9Driver;
+	friend class OpenGLDriver;
 };
-*/
+
 #endif

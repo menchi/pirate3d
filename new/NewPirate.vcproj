@@ -175,7 +175,15 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
+				RelativePath=".\VertexColor.frag"
+				>
+			</File>
+			<File
 				RelativePath=".\VertexColor.hlsl"
+				>
+			</File>
+			<File
+				RelativePath=".\VertexColor.vert"
 				>
 			</File>
 		</Filter>
@@ -236,6 +244,10 @@
 			</File>
 			<File
 				RelativePath=".\OpenGLDriverResources.h"
+				>
+			</File>
+			<File
+				RelativePath=".\OpenGLWrapper.cpp"
 				>
 			</File>
 			<File
