@@ -197,7 +197,30 @@ void OpenGLDriver::SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclar
 
 void OpenGLDriver::SetVertexStream(unsigned int StreamNumber, DriverVertexBufferPtr pVertexBuffer, unsigned int Stride)
 {
+	glBindBuffer(GL_ARRAY_BUFFER, pVertexBuffer->m_uiVertexBufferID);
 
+	const DriverVertexDeclaration::VertexParam* pParam = m_pCurVertexDeclaration->m_pVertex;
+
+	if (pParam && pParam->Index == StreamNumber)
+		glVertexPointer(pParam->Size, pParam->Type, pParam->Stride, pParam->Pointer);
+
+	pParam = m_pCurVertexDeclaration->m_pNormal;
+	if (pParam && pParam->Index == StreamNumber)
+		glNormalPointer(pParam->Type, pParam->Stride, pParam->Pointer);
+
+	pParam = m_pCurVertexDeclaration->m_pColor;
+	if (pParam && pParam->Index == StreamNumber)
+		glColorPointer(pParam->Size, pParam->Type, pParam->Stride, pParam->Pointer);
+
+	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
+	{
+		pParam = m_pCurVertexDeclaration->m_ppTexCoords[i];
+		if (pParam && pParam->Index == StreamNumber) 
+		{
+			glClientActiveTexture(GL_TEXTURE0 + i);
+			glTexCoordPointer(pParam->Size, pParam->Type, pParam->Stride, pParam->Pointer);
+		}
+	}
 }
 
 void OpenGLDriver::DrawIndexedTriangleList(DriverIndexBufferPtr pIndexBuffer, unsigned int NumVertices, unsigned int TriangleCount)

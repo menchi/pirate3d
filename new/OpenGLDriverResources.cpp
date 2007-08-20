@@ -27,8 +27,8 @@ void DriverIndexBuffer::Fill(void* pData, unsigned int Size)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, Size, pData, GL_STATIC_DRAW);
 }
 
-DriverVertexDeclaration::DriverVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers) :
-m_pVertex(0), m_pNormal(0), m_pColor(0)
+DriverVertexDeclaration::DriverVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers)
+:m_pVertex(0), m_pNormal(0), m_pColor(0)
 {
 	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
 		m_ppTexCoords[i] = NULL;
@@ -40,6 +40,8 @@ m_pVertex(0), m_pNormal(0), m_pColor(0)
 		for (unsigned int j=0; j<pVB->GetNumVertexElement(); ++j)
 		{
 			VertexParam p;
+			p.Index = ppVertexBuffers[i].first;
+
 			switch (pElements[j].Type)
 			{
 			case DECLTYPE_FLOAT1:
