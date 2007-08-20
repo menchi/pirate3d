@@ -55,6 +55,7 @@ private:
 	DriverVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers);
 
 	struct VertexParam {
+		unsigned short Index;
 		GLuint Size;
 		GLenum Type;
 		GLsizei Stride;
