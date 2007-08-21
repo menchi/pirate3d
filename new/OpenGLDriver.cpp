@@ -54,6 +54,7 @@ OpenGLDriver::OpenGLDriver(HWND window, int width, int height, bool fullScreen)
 		std::cerr << "Failed to initialize GLEW" << std::endl;
 
 	glFrontFace(GL_CW);
+	glEnable(GL_CULL_FACE);
 }
 
 OpenGLDriver::~OpenGLDriver()
@@ -202,15 +203,15 @@ void OpenGLDriver::SetVertexStream(unsigned int StreamNumber, DriverVertexBuffer
 	const DriverVertexDeclaration::VertexParam* pParam = m_pCurVertexDeclaration->m_pVertex;
 
 	if (pParam && pParam->Index == StreamNumber)
-		glVertexPointer(pParam->Size, pParam->Type, pParam->Stride, pParam->Pointer);
+		glVertexPointer(pParam->Size, pParam->Type, Stride, pParam->Pointer);
 
 	pParam = m_pCurVertexDeclaration->m_pNormal;
 	if (pParam && pParam->Index == StreamNumber)
-		glNormalPointer(pParam->Type, pParam->Stride, pParam->Pointer);
+		glNormalPointer(pParam->Type, Stride, pParam->Pointer);
 
 	pParam = m_pCurVertexDeclaration->m_pColor;
 	if (pParam && pParam->Index == StreamNumber)
-		glColorPointer(pParam->Size, pParam->Type, pParam->Stride, pParam->Pointer);
+		glColorPointer(pParam->Size, pParam->Type, Stride, pParam->Pointer);
 
 	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
 	{
@@ -218,19 +219,20 @@ void OpenGLDriver::SetVertexStream(unsigned int StreamNumber, DriverVertexBuffer
 		if (pParam && pParam->Index == StreamNumber) 
 		{
 			glClientActiveTexture(GL_TEXTURE0 + i);
-			glTexCoordPointer(pParam->Size, pParam->Type, pParam->Stride, pParam->Pointer);
+			glTexCoordPointer(pParam->Size, pParam->Type, Stride, pParam->Pointer);
 		}
 	}
 }
 
 void OpenGLDriver::DrawIndexedTriangleList(DriverIndexBufferPtr pIndexBuffer, unsigned int NumVertices, unsigned int TriangleCount)
 {
-
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pIndexBuffer->m_uiIndexBufferID);
+	glDrawElements(GL_TRIANGLES, NumVertices, GL_UNSIGNED_INT, BufferObjectPtr(0));
 }
 
 void OpenGLDriver::SetShaderProgram(ShaderProgramPtr pShaderProgram)
 {
-
+	glUseProgram(pShaderProgram->m_uiGLShaderProgram);
 }
 
 #endif
