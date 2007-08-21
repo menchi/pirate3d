@@ -34,13 +34,14 @@ void main()
 
 	const char* TwoToThree = "TwoToThree";
 	VertexShaderFragmentPtr pVSFragment;
-	pDriver->CreateVertexShaderFragmentsFromFile("VertexColor.vert", &TwoToThree, &pVSFragment, 1);
+	pDriver->CreateVertexShaderFragmentsFromFile("VertexColor.hlsl", &TwoToThree, &pVSFragment, 1);
 	VertexShaderPtr pVertexShader = pDriver->CreateVertexShader(&pVSFragment, 1);
 
-	const char* PassColor = "PassColor";
-	PixelShaderFragmentPtr pPSFragment;
-	pDriver->CreatePixelShaderFragmentsFromFile("VertexColor.frag", &PassColor, &pPSFragment, 1);
-	PixelShaderPtr pPixelShader = pDriver->CreatePixelShader(&pPSFragment, 1);
+	const char* PassColor[2] = {"InvertColor", "HalfColor"};//"PassColor";
+	PixelShaderFragmentPtr pPSFragments[2];
+	pDriver->CreatePixelShaderFragmentsFromFile("VertexColor.hlsl", PassColor, pPSFragments, 2);
+//	pDriver->CreatePixelShaderFragmentsFromFile("InvertColor.frag", &PassColor, &pPSFragments[1], 1);
+	PixelShaderPtr pPixelShader = pDriver->CreatePixelShader(pPSFragments, 2);
 
 	ShaderProgramPtr pShaderProgram = pDriver->CreateShaderProgram(pVertexShader, pPixelShader);
 
@@ -50,6 +51,6 @@ void main()
 	Canvas canvas = Device.GetCanvas();
 	while(Device.Run())
 	{
-		canvas << BackGroundColor(Colorf(0.0f, 0.3f, 0.2f, 1.0f)) << Eraser() << EndFrame;
+		canvas << BackGroundColor(Colorf(0.0f, 0.3f, 0.2f, 1.0f)) << Eraser() << pObj << EndFrame;
 	}
 }

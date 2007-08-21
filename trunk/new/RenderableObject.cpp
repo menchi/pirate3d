@@ -16,7 +16,7 @@ void RenderableObject::Use(VideoDriverPtr pDriver) const
 	const unsigned int n = (unsigned int)m_MeshBuffers.size();
 	for (unsigned int i=0; i<n; ++i)
 	{
-/*		pDriver->SetShaderProgram(m_Materials[i]->GetShaderProgram());
+		pDriver->SetShaderProgram(m_Materials[i]->GetShaderProgram());
 		pDriver->SetVertexDeclaration(m_MeshBuffers[i]->GetVertexDeclaration());
 		MeshBufferPtr pMeshBuffer = m_MeshBuffers[i];
 		unsigned int StreamNumber = pMeshBuffer->GetDriverVertexBuffer(i).first;
@@ -26,5 +26,5 @@ void RenderableObject::Use(VideoDriverPtr pDriver) const
 		unsigned int NumVertices = pMeshBuffer->GetVertexBuffer(i).second->GetNumVertices();
 		unsigned int NumIndices = pMeshBuffer->GetIndexBuffer()->GetNumIndices();
 		pDriver->DrawIndexedTriangleList(m_MeshBuffers[i]->GetDriverIndexBuffer(), NumVertices, NumIndices/3);
-*/	}
+	}
 }

@@ -3,8 +3,8 @@
 
 #include <Windows.h>
 
-//#define _PIRATE_COMPILE_WITH_D3D9_
-#define _PIRATE_COMPILE_WITH_OPENGL_
+#define _PIRATE_COMPILE_WITH_D3D9_
+//#define _PIRATE_COMPILE_WITH_OPENGL_
 
 #define _PIRATE_USE_D3DX_MATH_
 
