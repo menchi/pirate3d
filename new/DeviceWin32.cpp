@@ -1,5 +1,8 @@
 #include "DeviceWin32.h"
+#include "VideoDriver.h"
+#include "Canvas.h"
 
+//-----------------------------------------------------------------------------
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
@@ -11,7 +14,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }
-
+//-----------------------------------------------------------------------------
 DeviceWin32::DeviceWin32(int width, int height)
 {
 	HINSTANCE hInstance = GetModuleHandle(0);
@@ -64,12 +67,13 @@ DeviceWin32::DeviceWin32(int width, int height)
 	UpdateWindow(m_HWnd);
 
 	m_pVideoDriver = VideoDriver::CreateVideoDriver(m_HWnd, width, height, false);
+	m_pCanvas.reset(new Canvas(m_pVideoDriver));
 }
-
+//-----------------------------------------------------------------------------
 DeviceWin32::~DeviceWin32()
 {
 }
-
+//-----------------------------------------------------------------------------
 bool DeviceWin32::Run()
 {
 	MSG msg;
@@ -86,3 +90,4 @@ bool DeviceWin32::Run()
 
 	return !quit;
 }
+//-----------------------------------------------------------------------------

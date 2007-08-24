@@ -130,6 +130,8 @@ struct GenScatterHierarchy
 template <>
 struct GenScatterHierarchy<boost::mpl::l_end> {};
 
+typedef std::vector<VertexElement> VertexElementArray;
+
 template <class TList>
 struct GenVertexStruct : public GenScatterHierarchy<TList>
 {
@@ -148,11 +150,11 @@ struct GenVertexStruct : public GenScatterHierarchy<TList>
 		helper.pop_size();
 	}
 
-	static VertexElement VertexFormat[boost::mpl::size<TList>::value];
+	static VertexElementArray VertexFormat;
 };
 
 template <class TList>
-VertexElement GenVertexStruct<TList>::VertexFormat[boost::mpl::size<TList>::value];
+VertexElementArray GenVertexStruct<TList>::VertexFormat(boost::mpl::size<TList>::value);
 
 template <class T, class TList>
 T& Field(GenVertexStruct<TList>& obj)

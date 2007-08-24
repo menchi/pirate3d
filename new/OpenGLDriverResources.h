@@ -1,12 +1,12 @@
 #ifndef _PIRATE_OPENGL_DRIVER_RESOURCES_H_
 #define _PIRATE_OPENGL_DRIVER_RESOURCES_H_
 
-#include "SmartPointer.h"
 #include "OpenGLWrapper.h"
+#include "SmartPointer.h"
 #include <vector>
 #include <string>
 
-FWD_DECLARE(VertexBuffer)
+struct VertexElement;
 
 FWD_DECLARE(DriverVertexBuffer)
 FWD_DECLARE(DriverIndexBuffer)
@@ -17,8 +17,6 @@ FWD_DECLARE(VertexShader)
 FWD_DECLARE(PixelShaderFragment)
 FWD_DECLARE(PixelShader)
 FWD_DECLARE(ShaderProgram)
-
-typedef std::pair<unsigned short, VertexBufferPtr> StreamIndexVertexBufferPair;
 
 class DriverVertexBuffer {
 public:
@@ -52,13 +50,18 @@ public:
 	~DriverVertexDeclaration();
 
 private:
-	DriverVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers);
+	typedef std::vector<VertexElement> VertexElementArray;
+
+	typedef std::vector<unsigned short> StreamIndexArray;
+	typedef std::vector<const VertexElementArray*> VertexFormatArray;
+	typedef std::vector<unsigned short> NumVertexElementsArray;
+
+	DriverVertexDeclaration(const StreamIndexArray& StreamIndices, const VertexFormatArray& VertexFormats);
 
 	struct VertexParam {
 		unsigned short Index;
 		GLuint Size;
 		GLenum Type;
-		GLsizei Stride;
 		GLvoid* Pointer;
 	};
 
@@ -80,14 +83,16 @@ private:
 	GLuint m_uiGLVertexShader;
 
 	friend class OpenGLDriver;
-	friend class VertexShader;
+	friend class ShaderProgram;
 };
 
 class VertexShader {
 private:
-	VertexShader(VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments);
+	typedef std::vector<VertexShaderFragmentPtr> VertexShaderFragmentArray;
 
-	std::vector<GLuint> m_Fragments;
+	VertexShader(const VertexShaderFragmentArray& Fragments);
+
+	VertexShaderFragmentArray m_Fragments;
 
 	friend class OpenGLDriver;
 	friend class ShaderProgram;
@@ -103,22 +108,27 @@ private:
 	GLuint m_uiGLFragmentShader;
 
 	friend class OpenGLDriver;
-	friend class PixelShader;
+	friend class ShaderProgram;
 };
 
 class PixelShader {
 private:
-	PixelShader(PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments);
+	typedef std::vector<PixelShaderFragmentPtr> PixelShaderFragmentArray;
 
-	std::vector<GLuint> m_Fragments;
+	PixelShader(const PixelShaderFragmentArray& Fragments);
+
+	PixelShaderFragmentArray m_Fragments;
 
 	friend class OpenGLDriver;
 	friend class ShaderProgram;
 };
 
 class ShaderProgram {
+public:
+	~ShaderProgram();
+
 private:
-	ShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader);
+	ShaderProgram(const VertexShaderPtr pVertexShader, const PixelShaderPtr pPixelShader);
 
 	GLuint m_uiGLShaderProgram;
 

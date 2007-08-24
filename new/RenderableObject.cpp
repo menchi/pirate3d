@@ -1,5 +1,9 @@
 #include "RenderableObject.h"
+#include "MeshBuffer.h"
+#include "Material.h"
+#include "VideoDriver.h"
 
+//-----------------------------------------------------------------------------
 RenderableObject::RenderableObject(MeshBufferPtr* ppMeshBuffers, MaterialPtr* ppMaterials, unsigned int NumMeshBuffer)
 {
 	m_MeshBuffers.resize(NumMeshBuffer);
@@ -10,21 +14,28 @@ RenderableObject::RenderableObject(MeshBufferPtr* ppMeshBuffers, MaterialPtr* pp
 		m_Materials[i] = ppMaterials[i];
 	}
 }
-
+//-----------------------------------------------------------------------------
 void RenderableObject::Use(VideoDriverPtr pDriver) const
 {
+	pDriver->Begin();
+
 	const unsigned int n = (unsigned int)m_MeshBuffers.size();
 	for (unsigned int i=0; i<n; ++i)
 	{
-		pDriver->SetShaderProgram(m_Materials[i]->GetShaderProgram());
-		pDriver->SetVertexDeclaration(m_MeshBuffers[i]->GetVertexDeclaration());
 		MeshBufferPtr pMeshBuffer = m_MeshBuffers[i];
-		unsigned int StreamNumber = pMeshBuffer->GetDriverVertexBuffer(i).first;
-		DriverVertexBufferPtr pDriverVB = pMeshBuffer->GetDriverVertexBuffer(i).second;
-		unsigned int Stride = pMeshBuffer->GetVertexBuffer(i).second->GetVertexSize();
-		pDriver->SetVertexStream(StreamNumber, pDriverVB, Stride);
-		unsigned int NumVertices = pMeshBuffer->GetVertexBuffer(i).second->GetNumVertices();
-		unsigned int NumIndices = pMeshBuffer->GetIndexBuffer()->GetNumIndices();
-		pDriver->DrawIndexedTriangleList(m_MeshBuffers[i]->GetDriverIndexBuffer(), NumVertices, NumIndices/3);
+		pDriver->SetShaderProgram(m_Materials[i]->GetShaderProgram());
+		pDriver->SetVertexDeclaration(pMeshBuffer->GetVertexDeclaration());
+		for (unsigned int j=0; j<pMeshBuffer->GetNumVertexBuffers(); j++)
+		{
+			const MeshBuffer::StreamIndexArray& StreamNumbers = pMeshBuffer->GetStreamIndices();
+			const MeshBuffer::DriverVertexBufferArray& DriverVertexBuffers = pMeshBuffer->GetDriverVertexBuffers();
+			const MeshBuffer::VertexBufferArray& VertexBuffers = pMeshBuffer->GetVertexBuffers();
+			pDriver->SetVertexStream(StreamNumbers[j], DriverVertexBuffers[j], VertexBuffers[j]->GetVertexSize());
+			pDriver->DrawIndexedTriangleList(pMeshBuffer->GetDriverIndexBuffer(), VertexBuffers[j]->GetNumVertices(), 
+				pMeshBuffer->GetIndexBuffer()->GetNumIndices()/3);
+		}
 	}
+
+	pDriver->End();
 }
+//-----------------------------------------------------------------------------

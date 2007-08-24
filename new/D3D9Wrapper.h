@@ -5,9 +5,6 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
-#pragma comment(lib, "d3d9")
-#pragma comment(lib, "d3dx9")
-
 typedef boost::intrusive_ptr<IDirect3D9>					IDirect3D9Ptr;
 typedef boost::intrusive_ptr<IDirect3DDevice9>				IDirect3DDevice9Ptr;
 typedef boost::intrusive_ptr<IDirect3DSurface9>				IDirect3DSurface9Ptr;

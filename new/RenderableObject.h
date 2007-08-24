@@ -1,10 +1,11 @@
 #ifndef _PIRATE_RENDERABLE_OBJECT_H_
 #define _PIRATE_RENDERABLE_OBJECT_H_
 
-#include "VideoDriver.h"
-#include "MeshBuffer.h"
-#include "Material.h"
+#include "VideoDriverFwd.h"
 #include <vector>
+
+FWD_DECLARE(Material)
+FWD_DECLARE(MeshBuffer)
 
 FWD_DECLARE(RenderableObject)
 

@@ -175,10 +175,6 @@
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
 			<File
-				RelativePath=".\InvertColor.frag"
-				>
-			</File>
-			<File
 				RelativePath=".\VertexColor.frag"
 				>
 			</File>
@@ -262,6 +258,10 @@
 				RelativePath=".\VideoDriver.h"
 				>
 			</File>
+			<File
+				RelativePath=".\VideoDriverFwd.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="PaintTools"
@@ -272,6 +272,10 @@
 			</File>
 			<File
 				RelativePath=".\Canvas.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PaintTools.cpp"
 				>
 			</File>
 			<File

@@ -4,11 +4,6 @@
 #include "glew.h"
 #include <gl/gl.h>
 #include <gl/glu.h>
-#include <cstdio>
-
-#pragma comment(lib, "glew32.lib")
-#pragma comment(lib, "opengl32.lib")
-#pragma comment(lib, "glu32.lib")
 
 static const unsigned int MAX_TEXTURE_UNIT = 8;
 
@@ -17,7 +12,7 @@ void PrintProgramInfoLog(GLuint obj);
 
 inline GLvoid* BufferObjectPtr(unsigned int idx)
 {
-	return (GLvoid*)( ((char*)NULL) + idx );
+	return (GLvoid*)( ((char*)0) + idx );
 }
 
 #endif
