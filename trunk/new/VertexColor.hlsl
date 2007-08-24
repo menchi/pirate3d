@@ -1,6 +1,6 @@
 // 2D Polygon and vertex color
 
-void VSMain(in  float2 iPosition	:POSITION,
+void VMain(in  float2 iPosition	:POSITION,
 			in  float4 iColor		:COLOR,
 			out float4 oPosition	:POSITION,
 			out float4 oColor		:COLOR)
@@ -8,7 +8,7 @@ void VSMain(in  float2 iPosition	:POSITION,
 	oPosition = float4(iPosition, 0.5f, 1.0f);
 	oColor = iColor;
 }
-vertexfragment TwoToThree = compile_fragment vs_3_0 VSMain();
+vertexfragment VSMain = compile_fragment vs_3_0 VMain();
 
 void PSInvertColor(in  float4 iColor :COLOR,
 				   out float4 oColor :COLOR)
@@ -24,9 +24,9 @@ void PSHalfColor(in  float4 iColor :COLOR,
 }
 pixelfragment HalfColor = compile_fragment ps_3_0 PSHalfColor();
 
-void PSMain(in  float4 iColor :COLOR,
+void PMain(in  float4 iColor :COLOR,
 			out float4 oColor :COLOR)
 { 
 	oColor = iColor;
 }
-pixelfragment PassColor = compile_fragment ps_3_0 PSMain();
+pixelfragment PSMain = compile_fragment ps_3_0 PMain();

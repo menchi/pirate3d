@@ -1,9 +1,20 @@
 #include "Canvas.h"
+#include "VideoDriver.h"
 
-Canvas& EndFrame(Canvas& canvas)
+//-----------------------------------------------------------------------------
+Canvas& endf(Canvas& canvas)
 {
 	VideoDriverPtr pVideoDriver = canvas.GetVideoDriver();
 	pVideoDriver->SwapBuffer();
 
 	return canvas;
 }
+//-----------------------------------------------------------------------------
+Canvas& erase(Canvas& canvas)
+{
+	VideoDriverPtr pVideoDriver = canvas.GetVideoDriver();
+	pVideoDriver->Clear(true, true, true);
+
+	return canvas;
+}
+//-----------------------------------------------------------------------------

@@ -3,8 +3,9 @@
 
 #include "D3D9Wrapper.h"
 #include "SmartPointer.h"
+#include <vector>
 
-FWD_DECLARE(VertexBuffer)
+struct VertexElement;
 
 FWD_DECLARE(DriverVertexBuffer)
 FWD_DECLARE(DriverIndexBuffer)
@@ -15,8 +16,6 @@ FWD_DECLARE(VertexShader)
 FWD_DECLARE(PixelShaderFragment)
 FWD_DECLARE(PixelShader)
 FWD_DECLARE(ShaderProgram)
-
-typedef std::pair<unsigned short, VertexBufferPtr> StreamIndexVertexBufferPair;
 
 class DriverVertexBuffer {
 public:
@@ -45,7 +44,13 @@ private:
 
 class DriverVertexDeclaration {
 private:
-	DriverVertexDeclaration(IDirect3DDevice9Ptr pD3DDevice, StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers);
+	typedef std::vector<VertexElement> VertexElementArray;
+
+	typedef std::vector<unsigned short> StreamIndexArray;
+	typedef std::vector<const VertexElementArray*> VertexFormatArray;
+	typedef std::vector<unsigned short> NumVertexElementsArray;
+
+	DriverVertexDeclaration(IDirect3DDevice9Ptr pD3DDevice, const StreamIndexArray& StreamIndices, const VertexFormatArray& VertexFormats);
 
 	IDirect3DVertexDeclaration9Ptr m_pID3DVertexDeclaration;
 
@@ -54,7 +59,7 @@ private:
 
 class VertexShaderFragment {
 private:
-	VertexShaderFragment(ID3DXFragmentLinker* pLinker, const char* Name);
+	VertexShaderFragment(ID3DXFragmentLinkerPtr pLinker, const std::string& Name);
 
 	D3DXHANDLE m_hD3DXFragment;
 
@@ -64,7 +69,9 @@ private:
 
 class VertexShader {
 private:
-	VertexShader(ID3DXFragmentLinker* pLinker, VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments);
+	typedef std::vector<VertexShaderFragmentPtr> VertexShaderFragmentArray;
+
+	VertexShader(ID3DXFragmentLinkerPtr pLinker, const VertexShaderFragmentArray& Fragments);
 
 	IDirect3DVertexShader9Ptr m_pID3DVertexShader;
 
@@ -73,7 +80,7 @@ private:
 
 class PixelShaderFragment {
 private:
-	PixelShaderFragment(ID3DXFragmentLinker* pLinker, const char* Name);
+	PixelShaderFragment(ID3DXFragmentLinkerPtr pLinker, const std::string& Name);
 
 	D3DXHANDLE m_hD3DXFragment;
 
@@ -83,7 +90,9 @@ private:
 
 class PixelShader {
 private:
-	PixelShader(ID3DXFragmentLinker* pLinker, PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments);
+	typedef std::vector<PixelShaderFragmentPtr> PixelShaderFragmentArray;
+
+	PixelShader(ID3DXFragmentLinkerPtr pLinker, const PixelShaderFragmentArray& Fragments);
 
 	IDirect3DPixelShader9Ptr m_pID3DPixelShader;
 
@@ -92,7 +101,7 @@ private:
 
 class ShaderProgram {
 private:
-	ShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader);
+	ShaderProgram(const VertexShaderPtr pVertexShader, const PixelShaderPtr pPixelShader);
 
 	VertexShaderPtr m_pVertexShader;
 	PixelShaderPtr m_pPixelShader;

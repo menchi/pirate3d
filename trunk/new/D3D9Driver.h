@@ -2,11 +2,24 @@
 #define _PIRATE_D3D9_DRIVER_H_
 
 #include "CompileConfig.h"
-#include "D3D9DriverResources.h"
+#include "D3D9Wrapper.h"
+#include "BaseTypes.h"
 #include <set>
+#include <vector>
 #include <string>
+ 
+struct VertexElement;
 
-FWD_DECLARE(Canvas)
+FWD_DECLARE(DriverVertexBuffer)
+FWD_DECLARE(DriverIndexBuffer)
+FWD_DECLARE(DriverVertexDeclaration)
+
+FWD_DECLARE(VertexShaderFragment)
+FWD_DECLARE(VertexShader)
+FWD_DECLARE(PixelShaderFragment)
+FWD_DECLARE(PixelShader)
+FWD_DECLARE(ShaderProgram)
+
 FWD_DECLARE(D3D9Driver)
 TYPE_DEFINE_WITH_SMART_PTR(D3D9Driver, VideoDriver)
 
@@ -14,17 +27,22 @@ class D3D9Driver {
 public:
 	~D3D9Driver();
 
-	CanvasPtr GetCanvas() { return m_pCanvas; }
+	typedef std::vector<VertexElement> VertexElementArray;
+	typedef std::vector<unsigned short> StreamIndexArray;
+	typedef std::vector<const VertexElementArray*> VertexFormatArray;
+	typedef std::vector<VertexShaderFragmentPtr> VertexShaderFragmentArray;
+	typedef std::vector<PixelShaderFragmentPtr> PixelShaderFragmentArray;
+	typedef std::vector<std::string> NameArray;
 
 	DriverVertexBufferPtr CreateVertexBuffer(unsigned int NumVertices, unsigned int VertexSize);
 	DriverIndexBufferPtr CreateIndexBuffer(unsigned int NumIndices);
-	DriverVertexDeclarationPtr CreateVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers);
+	DriverVertexDeclarationPtr CreateVertexDeclaration(const StreamIndexArray& StreamIndices, const VertexFormatArray& VertexFormats);
 
-	bool CreateVertexShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments);
-	bool CreatePixelShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments);
-	VertexShaderPtr CreateVertexShader(VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments);
-	PixelShaderPtr CreatePixelShader(PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments);
-	ShaderProgramPtr CreateShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader);
+	VertexShaderFragmentArray CreateVertexShaderFragmentsFromFile(const std::string& FileName, const NameArray& FragmentNames);
+	PixelShaderFragmentArray CreatePixelShaderFragmentsFromFile(const std::string& FileName, const NameArray& FragmentNames);
+	VertexShaderPtr CreateVertexShader(const VertexShaderFragmentArray& Fragments);
+	PixelShaderPtr CreatePixelShader(const PixelShaderFragmentArray& Fragments);
+	ShaderProgramPtr CreateShaderProgram(const VertexShaderPtr pVertexShader, const PixelShaderPtr pPixelShader);
 
 	void SetBackgroundColor(Colorf color) { m_BackgroundColor = D3DCOLOR_COLORVALUE(color.r, color.g, color.b, color.a); }
 	void SetViewport(int x, int y, int w, int h);
@@ -35,6 +53,9 @@ public:
 
 	void Clear(bool color, bool z, bool stencil);
 	void SwapBuffer() {	m_pID3DDevice->Present(NULL, NULL, NULL, NULL);	}
+
+	void Begin();
+	void End();
 
 	static D3D9DriverPtr CreateVideoDriver(HWND window, int width, int height, bool fullScreen);
 
@@ -51,8 +72,6 @@ private:
 
 	typedef std::set<std::string> NameSet;
 	NameSet m_LoadedShaderSources;
-
-	CanvasPtr m_pCanvas;
 };
 
 #endif

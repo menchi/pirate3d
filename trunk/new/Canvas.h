@@ -1,7 +1,7 @@
 #ifndef _PIRATE_CANVAS_H_
 #define _PIRATE_CANVAS_H_
 
-#include "PaintTools.h"
+#include "VideoDriverFwd.h"
 
 class Canvas {
 public:
@@ -30,6 +30,7 @@ private:
 	VideoDriverWeakPtr m_pVideoDriver;
 };
 
-Canvas& EndFrame(Canvas& canvas);
+Canvas& endf(Canvas& canvas);
+Canvas& erase(Canvas& canvas);
 
 #endif

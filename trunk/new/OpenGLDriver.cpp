@@ -3,10 +3,17 @@
 #ifdef _PIRATE_COMPILE_WITH_OPENGL_
 
 #include "OpenGLDriver.h"
-#include "Canvas.h"
+#include "OpenGLDriverResources.h"
 #include <iostream>
 #include <fstream>
 
+#pragma comment(lib, "glew32.lib")
+#pragma comment(lib, "opengl32.lib")
+#pragma comment(lib, "glu32.lib")
+
+using namespace std;
+
+//-----------------------------------------------------------------------------
 OpenGLDriver::OpenGLDriver(HWND window, int width, int height, bool fullScreen)
 : m_iWidth(width), m_iHeight(height), m_bIsFullScreen(fullScreen), m_Window(window)
 {
@@ -34,44 +41,43 @@ OpenGLDriver::OpenGLDriver(HWND window, int width, int height, bool fullScreen)
 
 	m_hDC = GetDC (window);
 	if (!m_hDC)
-		std::cerr << "Failed to get device context" << std::endl;
+		cerr << "Failed to get device context" << endl;
 
 	GLuint PixelFormat = ChoosePixelFormat (m_hDC, &pfd);		
 	if (!PixelFormat)
-		std::cerr << "Failed to find a compatible pixel format" << std::endl;
+		cerr << "Failed to find a compatible pixel format" << std::endl;
 
 	if (SetPixelFormat(m_hDC, PixelFormat, &pfd) == FALSE)
-		std::cerr << "Failed to set pixel format" << std::endl;
+		cerr << "Failed to set pixel format" << endl;
 
 	m_hRC = wglCreateContext(m_hDC);
 	if (!m_hRC)
-		std::cerr << "Failed to create rendering context" << std::endl;
+		cerr << "Failed to create rendering context" << std::endl;
 
 	if (wglMakeCurrent (m_hDC, m_hRC) == FALSE)
-		std::cerr << "Failed to bind rendering context" << std::endl;
+		cerr << "Failed to bind rendering context" << std::endl;
 
 	if (glewInit() != GLEW_OK)
-		std::cerr << "Failed to initialize GLEW" << std::endl;
+		cerr << "Failed to initialize GLEW" << endl;
 
 	glFrontFace(GL_CW);
 	glEnable(GL_CULL_FACE);
 }
-
+//-----------------------------------------------------------------------------
 OpenGLDriver::~OpenGLDriver()
 {
 	wglMakeCurrent(m_hDC, 0);
 	wglDeleteContext(m_hRC);
 	ReleaseDC(m_Window, m_hDC);
 }
-
+//-----------------------------------------------------------------------------
 OpenGLDriverPtr OpenGLDriver::CreateVideoDriver(HWND window, int width, int height, bool fullScreen)
 {
 	OpenGLDriverPtr pDriver(new OpenGLDriver(window, width, height, fullScreen));
-	pDriver->m_pCanvas.reset(new Canvas(pDriver));
 
 	return pDriver;
 }
-
+//-----------------------------------------------------------------------------
 void OpenGLDriver::Clear(bool color, bool z, bool stencil)
 {
 	GLbitfield flag = 0;
@@ -80,88 +86,224 @@ void OpenGLDriver::Clear(bool color, bool z, bool stencil)
 	flag = (stencil)? flag | GL_STENCIL_BUFFER_BIT : flag;
 	glClear(flag);
 }
-
+//-----------------------------------------------------------------------------
 void OpenGLDriver::SetViewport(int x, int y, int w, int h)
 {
 	glViewport(x, y, w, h);
 	glScissor(x, y, w, h);
 	glEnable(GL_SCISSOR_TEST);
 }
-
+//-----------------------------------------------------------------------------
 DriverVertexBufferPtr OpenGLDriver::CreateVertexBuffer(unsigned int NumVertices, unsigned int VertexSize)
 {
 	return DriverVertexBufferPtr(new DriverVertexBuffer(NumVertices, VertexSize));
 }
-
+//-----------------------------------------------------------------------------
 DriverIndexBufferPtr OpenGLDriver::CreateIndexBuffer(unsigned int NumIndices)
 {
 	return DriverIndexBufferPtr(new DriverIndexBuffer(NumIndices));
 }
-
-DriverVertexDeclarationPtr OpenGLDriver::CreateVertexDeclaration(StreamIndexVertexBufferPair* ppVertexBuffers, unsigned int NumVertexBuffers)
+//-----------------------------------------------------------------------------
+DriverVertexDeclarationPtr OpenGLDriver::CreateVertexDeclaration(const StreamIndexArray& StreamIndices, const VertexFormatArray& VertexFormats)
 {
-	return DriverVertexDeclarationPtr(new DriverVertexDeclaration(ppVertexBuffers, NumVertexBuffers));
+	return DriverVertexDeclarationPtr(new DriverVertexDeclaration(StreamIndices, VertexFormats));
 }
-
-bool OpenGLDriver::CreateVertexShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, VertexShaderFragmentPtr* ppFragments, 
-													   unsigned int NumFragments)
+//-----------------------------------------------------------------------------
+OpenGLDriver::VertexShaderFragmentArray OpenGLDriver::CreateVertexShaderFragmentsFromFile(const string& FileName, const NameArray& FragmentNames)
 {
-	using namespace std;
-
-	ifstream file(FileName);
+	ifstream file(FileName.c_str());
+	VertexShaderFragmentArray r;
 	if (!file.is_open())
-		return false;
+	{
+		cerr << "Open file failed: " << FileName << endl;
+		return r;
+	}
 
 	file.seekg(0, ios::end);
 	streampos pos = file.tellg();
 	streamsize size = pos;
 	file.seekg(0);
 	string s;
+	char c;
 	s.resize(size+1);
-	file.read(&s[0], size);
 
-	ppFragments[0] = VertexShaderFragmentPtr(new VertexShaderFragment(s));
-	
-	return true;
+	NameArray::size_type count = FragmentNames.size();
+	r.resize(count);
+
+	while (file)
+	{
+		file.get(&s[0], size, '<');
+		file.get(c);
+		file.get(&s[0], size, ' ');
+		if (string(s.c_str()) != "GLSLBegin")
+			break;
+
+		file.get(&s[0], size, '=');
+		if (s.find("Name") == string::npos)
+		{
+			cerr << "No Name attribute to identify GLSL code" << endl;
+			break;
+		}
+		file.get(c);
+		file.get(&s[0], size, '"');
+		file.get(c);
+		file.get(&s[0], size, '"');
+		unsigned int i=0;
+		for (i=0; i<FragmentNames.size(); ++i)
+		{
+			string text(s.c_str());
+			if (FragmentNames[i] == text)
+				break;
+		}
+		if (!file.get(&s[0], size, '>'))
+			break;
+		file.get(c);
+
+		string source;
+		source.resize(size+1);
+		file.get(&source[0], size, '<');
+
+		if (!file.get(&s[0], size, '/'))
+		{
+			cerr << "No </GLSL> tag?" << endl;
+			break;
+		}
+		file.get(&s[0], size, '>');
+		if (string(s.c_str()) != string("/GLSLEnd"))
+		{
+			cerr << "No </GLSL> tag?" << endl;
+			break;
+		}
+
+		if (i == FragmentNames.size())
+			continue;
+
+		if (r[i])
+		{
+			cerr << "Name conflict in the file" << endl;
+			break;
+		}
+
+		r[i].reset(new VertexShaderFragment(source));
+		--count;
+	}
+
+	if (count)
+	{
+		cerr << "Some shader fragment not found" << endl;
+		r.clear();
+		return r;
+	}
+
+	return r;
 }
-
-bool OpenGLDriver::CreatePixelShaderFragmentsFromFile(const char* FileName, const char** ppFragmentNames, PixelShaderFragmentPtr* ppFragments, 
-													  unsigned int NumFragments)
+//-----------------------------------------------------------------------------
+OpenGLDriver::PixelShaderFragmentArray OpenGLDriver::CreatePixelShaderFragmentsFromFile(const string& FileName, const NameArray& FragmentNames)
 {
 	using namespace std;
 
-	ifstream file(FileName);
+	ifstream file(FileName.c_str());
+	PixelShaderFragmentArray r;
 	if (!file.is_open())
-		return false;
+	{
+		cerr << "Open file failed: " << FileName << endl;
+		return r;
+	}
 
 	file.seekg(0, ios::end);
 	streampos pos = file.tellg();
 	streamsize size = pos;
 	file.seekg(0);
 	string s;
+	char c;
 	s.resize(size+1);
-	file.read(&s[0], size);
 
-	ppFragments[0] = PixelShaderFragmentPtr(new PixelShaderFragment(s));
+	NameArray::size_type count = FragmentNames.size();
+	r.resize(count);
 
-	return true;
+	while (file)
+	{
+		file.get(&s[0], size, '<');
+		file.get(c);
+		file.get(&s[0], size, ' ');
+		if (string(s.c_str()) != "GLSLBegin")
+			break;
+
+		file.get(&s[0], size, '=');
+		if (s.find("Name") == string::npos)
+		{
+			cerr << "No Name attribute to identify GLSL code" << endl;
+			break;
+		}
+		file.get(c);
+		file.get(&s[0], size, '"');
+		file.get(c);
+		file.get(&s[0], size, '"');
+		unsigned int i=0;
+		for (i=0; i<FragmentNames.size(); ++i)
+		{
+			string text(s.c_str());
+			if (FragmentNames[i] == text)
+				break;
+		}
+		if (!file.get(&s[0], size, '>'))
+			break;
+		file.get(c);
+
+		string source;
+		source.resize(size+1);
+		file.get(&source[0], size, '<');
+
+		if (!file.get(&s[0], size, '/'))
+		{
+			cerr << "No </GLSL> tag?" << endl;
+			break;
+		}
+		file.get(&s[0], size, '>');
+		if (string(s.c_str()) != string("/GLSLEnd"))
+		{
+			cerr << "No </GLSL> tag?" << endl;
+			break;
+		}
+
+		if (i == FragmentNames.size())
+			continue;
+
+		if (r[i])
+		{
+			cerr << "Name conflict in the file" << endl;
+			break;
+		}
+
+		r[i].reset(new PixelShaderFragment(source));
+		--count;
+	}
+
+	if (count)
+	{
+		cerr << "Some shader fragment not found" << endl;
+		r.clear();
+		return r;
+	}
+
+	return r;
 }
-
-VertexShaderPtr OpenGLDriver::CreateVertexShader(VertexShaderFragmentPtr* ppFragments, unsigned int NumFragments)
+//-----------------------------------------------------------------------------
+VertexShaderPtr OpenGLDriver::CreateVertexShader(const VertexShaderFragmentArray& Fragments)
 {
-	return VertexShaderPtr(new VertexShader(ppFragments, NumFragments));
+	return VertexShaderPtr(new VertexShader(Fragments));
 }
-
-PixelShaderPtr OpenGLDriver::CreatePixelShader(PixelShaderFragmentPtr* ppFragments, unsigned int NumFragments)
+//-----------------------------------------------------------------------------
+PixelShaderPtr OpenGLDriver::CreatePixelShader(const PixelShaderFragmentArray& Fragments)
 {
-	return PixelShaderPtr(new PixelShader(ppFragments, NumFragments));
+	return PixelShaderPtr(new PixelShader(Fragments));
 }
-
-ShaderProgramPtr OpenGLDriver::CreateShaderProgram(VertexShaderPtr pVertexShader, PixelShaderPtr pPixelShader)
+//-----------------------------------------------------------------------------
+ShaderProgramPtr OpenGLDriver::CreateShaderProgram(const VertexShaderPtr pVertexShader, const PixelShaderPtr pPixelShader)
 {
 	return ShaderProgramPtr(new ShaderProgram(pVertexShader, pPixelShader));
 }
-
+//-----------------------------------------------------------------------------
 void OpenGLDriver::SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclaration)
 {
 	if (pVertexDeclaration->m_pVertex)
@@ -195,7 +337,7 @@ void OpenGLDriver::SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclar
 
 	m_pCurVertexDeclaration = pVertexDeclaration;
 }
-
+//-----------------------------------------------------------------------------
 void OpenGLDriver::SetVertexStream(unsigned int StreamNumber, DriverVertexBufferPtr pVertexBuffer, unsigned int Stride)
 {
 	glBindBuffer(GL_ARRAY_BUFFER, pVertexBuffer->m_uiVertexBufferID);
@@ -223,16 +365,25 @@ void OpenGLDriver::SetVertexStream(unsigned int StreamNumber, DriverVertexBuffer
 		}
 	}
 }
-
+//-----------------------------------------------------------------------------
 void OpenGLDriver::DrawIndexedTriangleList(DriverIndexBufferPtr pIndexBuffer, unsigned int NumVertices, unsigned int TriangleCount)
 {
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pIndexBuffer->m_uiIndexBufferID);
 	glDrawElements(GL_TRIANGLES, NumVertices, GL_UNSIGNED_INT, BufferObjectPtr(0));
 }
-
+//-----------------------------------------------------------------------------
 void OpenGLDriver::SetShaderProgram(ShaderProgramPtr pShaderProgram)
 {
 	glUseProgram(pShaderProgram->m_uiGLShaderProgram);
 }
+//-----------------------------------------------------------------------------
+void OpenGLDriver::Begin()
+{
+}
+//-----------------------------------------------------------------------------
+void OpenGLDriver::End()
+{
+}
+//-----------------------------------------------------------------------------
 
 #endif
