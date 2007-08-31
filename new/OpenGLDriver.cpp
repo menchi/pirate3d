@@ -4,6 +4,7 @@
 
 #include "OpenGLDriver.h"
 #include "OpenGLDriverResources.h"
+#include "boost/tr1/functional.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -306,33 +307,14 @@ ShaderProgramPtr OpenGLDriver::CreateShaderProgram(const VertexShaderPtr pVertex
 //-----------------------------------------------------------------------------
 void OpenGLDriver::SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclaration)
 {
-	if (pVertexDeclaration->m_pVertex)
-		glEnableClientState(GL_VERTEX_ARRAY);
-	else
-		glDisableClientState(GL_VERTEX_ARRAY);
-
-	if (pVertexDeclaration->m_pNormal) 
-		glEnableClientState(GL_NORMAL_ARRAY);
-	else
-		glDisableClientState(GL_NORMAL_ARRAY);
-
-	if (pVertexDeclaration->m_pColor) 
-		glEnableClientState(GL_COLOR_ARRAY);
-	else
-		glDisableClientState(GL_COLOR_ARRAY);
+	pVertexDeclaration->VertexClientState(GL_VERTEX_ARRAY);
+	pVertexDeclaration->NormalClientState(GL_NORMAL_ARRAY);
+	pVertexDeclaration->ColorClientState(GL_COLOR_ARRAY);
 
 	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
 	{
-		if (pVertexDeclaration->m_ppTexCoords[i]) 
-		{
-			glClientActiveTexture(GL_TEXTURE0 + i);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		}
-		else
-		{
-			glClientActiveTexture(GL_TEXTURE0 + i);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		}
+		glClientActiveTexture(GL_TEXTURE0 + i);
+		pVertexDeclaration->TexCoordClientState[i](GL_TEXTURE_COORD_ARRAY);
 	}
 
 	m_pCurVertexDeclaration = pVertexDeclaration;
@@ -340,29 +322,17 @@ void OpenGLDriver::SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclar
 //-----------------------------------------------------------------------------
 void OpenGLDriver::SetVertexStream(unsigned int StreamNumber, DriverVertexBufferPtr pVertexBuffer, unsigned int Stride)
 {
+	using namespace std;
+
 	glBindBuffer(GL_ARRAY_BUFFER, pVertexBuffer->m_uiVertexBufferID);
 
-	const DriverVertexDeclaration::VertexParam* pParam = m_pCurVertexDeclaration->m_pVertex;
-
-	if (pParam && pParam->Index == StreamNumber)
-		glVertexPointer(pParam->Size, pParam->Type, Stride, pParam->Pointer);
-
-	pParam = m_pCurVertexDeclaration->m_pNormal;
-	if (pParam && pParam->Index == StreamNumber)
-		glNormalPointer(pParam->Type, Stride, pParam->Pointer);
-
-	pParam = m_pCurVertexDeclaration->m_pColor;
-	if (pParam && pParam->Index == StreamNumber)
-		glColorPointer(pParam->Size, pParam->Type, Stride, pParam->Pointer);
-
-	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
+	DriverVertexDeclaration::UnaryFunctionArray& functions = m_pCurVertexDeclaration->m_GLPointerFunctions;
+	for_each(functions.begin(), functions.end(), bind2nd(mem_fun_ref(&DriverVertexDeclaration::UnaryFunction::operator()), Stride));
+	functions = m_pCurVertexDeclaration->m_GLTexCoordPointers;
+	for (unsigned int i=0; i<functions.size(); ++i)
 	{
-		pParam = m_pCurVertexDeclaration->m_ppTexCoords[i];
-		if (pParam && pParam->Index == StreamNumber) 
-		{
-			glClientActiveTexture(GL_TEXTURE0 + i);
-			glTexCoordPointer(pParam->Size, pParam->Type, Stride, pParam->Pointer);
-		}
+		glClientActiveTexture(GL_TEXTURE0 + m_pCurVertexDeclaration->m_TexCoordIndices[i]);
+		functions[i](Stride);
 	}
 }
 //-----------------------------------------------------------------------------

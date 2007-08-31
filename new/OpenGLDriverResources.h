@@ -2,11 +2,12 @@
 #define _PIRATE_OPENGL_DRIVER_RESOURCES_H_
 
 #include "OpenGLWrapper.h"
+#include "OpenGLVertexFormat.h"
 #include "SmartPointer.h"
+#include "boost/tr1/functional.hpp"
+#include <map>
 #include <vector>
 #include <string>
-
-struct VertexElement;
 
 FWD_DECLARE(DriverVertexBuffer)
 FWD_DECLARE(DriverIndexBuffer)
@@ -46,29 +47,22 @@ private:
 };
 
 class DriverVertexDeclaration {
-public:
-	~DriverVertexDeclaration();
-
 private:
-	typedef std::vector<VertexElement> VertexElementArray;
-
 	typedef std::vector<unsigned short> StreamIndexArray;
-	typedef std::vector<const VertexElementArray*> VertexFormatArray;
-	typedef std::vector<unsigned short> NumVertexElementsArray;
+	typedef std::vector<const VertexFormat*> VertexFormatArray;
+	typedef std::tr1::function<void (GLsizei)> UnaryFunction;
+	typedef std::vector<UnaryFunction> UnaryFunctionArray;
 
 	DriverVertexDeclaration(const StreamIndexArray& StreamIndices, const VertexFormatArray& VertexFormats);
 
-	struct VertexParam {
-		unsigned short Index;
-		GLuint Size;
-		GLenum Type;
-		GLvoid* Pointer;
-	};
+	void (GLAPIENTRY *VertexClientState)(GLenum);
+	void (GLAPIENTRY *NormalClientState)(GLenum);
+	void (GLAPIENTRY *ColorClientState)(GLenum);
+	void (GLAPIENTRY *TexCoordClientState[MAX_TEXTURE_UNIT])(GLenum);
 
-	VertexParam* m_pVertex;
-	VertexParam* m_pNormal;
-	VertexParam* m_pColor;
-	VertexParam* m_ppTexCoords[MAX_TEXTURE_UNIT];
+	UnaryFunctionArray m_GLPointerFunctions;
+	std::vector<int> m_TexCoordIndices;
+	UnaryFunctionArray m_GLTexCoordPointers;
 
 	friend class OpenGLDriver;
 };
