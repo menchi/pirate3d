@@ -3,9 +3,8 @@
 
 #include "CompileConfig.h"
 #include "OpenGLWrapper.h"
+#include "OpenGLVertexFormat.h"
 #include <vector>
-
-struct VertexElement;
 
 FWD_DECLARE(DriverVertexBuffer)
 FWD_DECLARE(DriverIndexBuffer)
@@ -21,9 +20,8 @@ TYPE_DEFINE_WITH_SMART_PTR(OpenGLDriver, VideoDriver)
 
 class OpenGLDriver {
 public:
-	typedef std::vector<VertexElement> VertexElementArray;
 	typedef std::vector<unsigned short> StreamIndexArray;
-	typedef std::vector<const VertexElementArray*> VertexFormatArray;
+	typedef std::vector<const VertexFormat*> VertexFormatArray;
 	typedef std::vector<VertexShaderFragmentPtr> VertexShaderFragmentArray;
 	typedef std::vector<PixelShaderFragmentPtr> PixelShaderFragmentArray;
 	typedef std::vector<std::string> NameArray;

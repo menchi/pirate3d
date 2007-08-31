@@ -3,7 +3,6 @@
 #ifdef _PIRATE_COMPILE_WITH_D3D9_
 
 #include "D3D9DriverResources.h"
-#include "VertexFormat.h"
 
 using namespace std;
 

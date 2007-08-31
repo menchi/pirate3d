@@ -1,6 +1,5 @@
 #include "MeshBuffer.h"
 #include "VideoDriver.h"
-#include "VertexFormat.h"
 
 //-----------------------------------------------------------------------------
 VertexBuffer::~VertexBuffer()
@@ -36,7 +35,7 @@ MeshBuffer::MeshBuffer(const VertexBufferArray& VertexBuffers, const StreamIndex
 void MeshBuffer::CreateDriverResources(VideoDriverPtr pDriver)
 {
 	const unsigned int n = GetNumVertexBuffers();
-	std::vector<const VertexElementArray*> VertexFormats(n);
+	std::vector<const VertexFormat*> VertexFormats(n);
 	for (unsigned int i=0; i<n; i++)
 	{
 		m_DriverVertexBuffers[i] = pDriver->CreateVertexBuffer(m_VertexBuffers[i]->GetNumVertices(), m_VertexBuffers[i]->GetVertexSize());

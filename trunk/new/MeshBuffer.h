@@ -4,19 +4,15 @@
 #include "VideoDriverFwd.h"
 #include <vector>
 
-struct VertexElement;
-
 FWD_DECLARE(VertexBuffer)
 FWD_DECLARE(IndexBuffer)
 FWD_DECLARE(MeshBuffer)
 
 class VertexBuffer {
 public:
-	~VertexBuffer();
+	VertexBuffer::~VertexBuffer();
 
-	typedef std::vector<VertexElement> VertexElementArray;
-
-	const VertexElementArray& GetVertexFormat() const { return m_VertexFormat; }
+	const VertexFormat& GetVertexFormat() const { return m_VertexFormat; }
 	const unsigned int GetNumVertices() const { return m_uiNumVertices; }
 	const unsigned int GetVertexSize() const { return m_uiVertexSize; }
 
@@ -27,7 +23,7 @@ public:
 
 	template<class T> static VertexBufferPtr Create(unsigned int NumVertices)
 	{
-		VertexBufferPtr pVB(new VertexBuffer(T::VertexFormat));
+		VertexBufferPtr pVB(new VertexBuffer(::GetVertexFormat<T>()));
 		pVB->m_pBuffer = malloc(sizeof(T) * NumVertices);
 		pVB->m_uiVertexSize = sizeof(T);
 		pVB->m_uiNumVertices = NumVertices;
@@ -36,12 +32,12 @@ public:
 	}
 
 private:
-	VertexBuffer(const VertexElementArray& VertexFormat):m_uiVertexSize(0), m_uiNumVertices(0), m_pBuffer(0), m_VertexFormat(VertexFormat) {};
+	VertexBuffer(const VertexFormat& VertexFormat): m_uiVertexSize(0), m_uiNumVertices(0), m_pBuffer(0), m_VertexFormat(VertexFormat) {};
 
 	unsigned int m_uiVertexSize;
 	unsigned int m_uiNumVertices;
 	void* m_pBuffer;
-	const VertexElementArray& m_VertexFormat;
+	const VertexFormat& m_VertexFormat;
 };
 
 class IndexBuffer {

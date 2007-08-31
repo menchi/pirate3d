@@ -2,11 +2,15 @@
 #include "RenderableObject.h"
 #include "MeshBuffer.h"
 #include "Material.h"
-#include "VertexFormat.h"
 #include "Canvas.h"
 #include "PaintTools.h"
 #include "VideoDriver.h"
+#include "OpenGLVertexFormat.h"
+#include "HierarchyGenerator.h"
 #include <crtdbg.h>
+
+using namespace std;
+using namespace boost::mpl;
 
 void main()
 {
@@ -14,24 +18,18 @@ void main()
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-	using namespace std;
+	typedef GenVertexStruct<TYPE_LIST<POSITION2f, COLOR4f> > VertexStruct;
 
-	typedef POSITION<float, 2> XY;
-	typedef COLOR<> RGBA;
-	typedef GenVertexStruct<TYPE_LIST<XY, RGBA> > XYRGBA;
+	vector<VertexBufferPtr> VB_(1);
+	VB_[0] = VertexBuffer::Create<VertexStruct>(3);
+	VertexStruct* v_ = VB_[0]->GetBufferPtr<VertexStruct>();
 
-	XYRGBA v[3];
-	Field<XY>(v[0])[0] = 0.0f; Field<XY>(v[0])[1] = 0.5f; 
-	Field<RGBA>(v[0])[0] = 1.0f; Field<RGBA>(v[0])[1] = 0.0f; Field<RGBA>(v[0])[2] = 0.0f; Field<RGBA>(v[0])[3] = 1.0f;
-	Field<XY>(v[1])[0] = 0.5f; Field<XY>(v[1])[1] =-0.5f; 
-	Field<RGBA>(v[1])[0] = 0.0f; Field<RGBA>(v[1])[1] = 1.0f; Field<RGBA>(v[1])[2] = 0.0f; Field<RGBA>(v[1])[3] = 1.0f;
-	Field<XY>(v[2])[0] =-0.5f; Field<XY>(v[2])[1] =-0.5f; 
-	Field<RGBA>(v[2])[0] = 0.0f; Field<RGBA>(v[2])[1] = 0.0f; Field<RGBA>(v[2])[2] = 1.0f; Field<RGBA>(v[2])[3] = 1.0f;
-
-	vector<VertexBufferPtr> VB(1);
-	VB[0] = VertexBuffer::Create<XYRGBA>(3);
-	XYRGBA* pBuffer = VB[0]->GetBufferPtr<XYRGBA>();
-	memcpy(pBuffer, v, sizeof(v));
+	field<POSITION2f>(v_[0])[0] = 0.0f; field<POSITION2f>(v_[0])[1] = 0.5f; 
+	field<COLOR4f>(v_[0])[0] = 1.0f; field<COLOR4f>(v_[0])[1] = 0.0f; field<COLOR4f>(v_[0])[2] = 0.0f; field<COLOR4f>(v_[0])[3] = 1.0f;
+	field<POSITION2f>(v_[1])[0] = 0.5f; field<POSITION2f>(v_[1])[1] =-0.5f; 
+	field<COLOR4f>(v_[1])[0] = 0.0f; field<COLOR4f>(v_[1])[1] = 1.0f; field<COLOR4f>(v_[1])[2] = 0.0f; field<COLOR4f>(v_[1])[3] = 1.0f;
+	field<POSITION2f>(v_[2])[0] =-0.5f; field<POSITION2f>(v_[2])[1] =-0.5f; 
+	field<COLOR4f>(v_[2])[0] = 0.0f; field<COLOR4f>(v_[2])[1] = 0.0f; field<COLOR4f>(v_[2])[2] = 1.0f; field<COLOR4f>(v_[2])[3] = 1.0f;
 
 	vector<unsigned short> SI(1);
 	SI[0] = 0;
@@ -43,7 +41,7 @@ void main()
 	DeviceWin32 Device(640, 480);
 	VideoDriverPtr pDriver = Device.GetVideoDriver();
 
-	MeshBufferPtr pMB = MeshBuffer::Create(VB, SI, pIB);
+	MeshBufferPtr pMB = MeshBuffer::Create(VB_, SI, pIB);
 	pMB->CreateDriverResources(pDriver);
 
 	VideoDriver::NameArray VSNames(1);

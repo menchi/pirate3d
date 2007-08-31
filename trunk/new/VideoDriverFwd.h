@@ -18,6 +18,7 @@ FWD_DECLARE(ShaderProgram)
 class D3D9Driver;
 TYPE_DEFINE_WITH_SMART_PTR(D3D9Driver, VideoDriver)
 #elif defined(_PIRATE_COMPILE_WITH_OPENGL_)
+#include "OpenGLVertexFormat.h"
 class OpenGLDriver;
 TYPE_DEFINE_WITH_SMART_PTR(OpenGLDriver, VideoDriver)
 #endif

@@ -3,7 +3,6 @@
 #ifdef _PIRATE_COMPILE_WITH_OPENGL_
 
 #include "OpenGLDriverResources.h"
-#include "VertexFormat.h"
 
 //-----------------------------------------------------------------------------
 DriverVertexBuffer::DriverVertexBuffer(unsigned int NumVertices, unsigned int VertexSize) : m_uiVertexSize(VertexSize)
@@ -29,71 +28,51 @@ void DriverIndexBuffer::Fill(void* pData, unsigned int Size)
 }
 //-----------------------------------------------------------------------------
 DriverVertexDeclaration::DriverVertexDeclaration(const StreamIndexArray& StreamIndices, const VertexFormatArray& VertexFormats)
-: m_pVertex(0), m_pNormal(0), m_pColor(0)
+: VertexClientState(glDisableClientState), NormalClientState(glDisableClientState), ColorClientState(glDisableClientState)
 {
-	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
-		m_ppTexCoords[i] = NULL;
+	using namespace std;
+	using namespace std::tr1;
 
-	const unsigned int n = (unsigned int)StreamIndices.size();
-	for (unsigned int i=0; i<n; ++i)
+	fill(TexCoordClientState, TexCoordClientState + MAX_TEXTURE_UNIT, glDisableClientState);
+
+	function<void (GLint, GLenum, GLsizei, const GLvoid*)> PointerFunction;
+	function<void (GLenum, GLsizei, const GLvoid*)> NormalPointerFunction(glNormalPointer);
+
+	for (unsigned int i=0; i<StreamIndices.size(); ++i)
 	{
-		const VertexElementArray& VertexFormat = *VertexFormats[i];
-
-		unsigned int NumVertexElements = (unsigned int)VertexFormat.size();
-		for (unsigned int j=0; j<NumVertexElements; ++j)
+		const VertexFormat& format = *VertexFormats[i];
+		unsigned int offset = 0;
+		
+		for (unsigned int j=0; j<format.size(); ++j)
 		{
-			VertexParam p;
-			p.Index = StreamIndices[i];
-
-			const VertexElement* pElement = &VertexFormat[j];
-			switch (pElement->Type)
-			{
-			case DECLTYPE_FLOAT1:
-				p.Size = 1;
-				p.Type = GL_FLOAT;
-				break;
-			case DECLTYPE_FLOAT2:
-				p.Size = 2;
-				p.Type = GL_FLOAT;
-				break;
-			case DECLTYPE_FLOAT3:
-				p.Size = 2;
-				p.Type = GL_FLOAT;
-				break;
-			case DECLTYPE_FLOAT4:
-				p.Size = 4;
-				p.Type = GL_FLOAT;
-				break;
-			}
-
-			p.Pointer = BufferObjectPtr(pElement->Offset);
+			const VertexElement* pElement = &format[j];
+			offset = (j == 0)? 0: offset + format[j-1].TypeSize;
 
 			switch (pElement->Usage)
 			{
-			case DECLUSAGE_POSITION:
-				m_pVertex = new VertexParam(p);
+			case GL_VERTEX_ARRAY:
+				VertexClientState = glEnableClientState;
+				PointerFunction = glVertexPointer;
+				m_GLPointerFunctions.push_back(bind(PointerFunction, pElement->Size, pElement->Type, _1, BufferObjectPtr(offset)));
 				break;
-			case DECLUSAGE_NORMAL:
-				m_pNormal = new VertexParam(p);
+			case GL_NORMAL_ARRAY:
+				NormalClientState = glEnableClientState;
+				m_GLPointerFunctions.push_back(bind(NormalPointerFunction, pElement->Type, _1, BufferObjectPtr(offset)));
 				break;
-			case DECLUSAGE_COLOR:
-				m_pColor = new VertexParam(p);
+			case GL_COLOR_ARRAY:
+				ColorClientState = glEnableClientState;
+				PointerFunction = glColorPointer;
+				m_GLPointerFunctions.push_back(bind(PointerFunction, pElement->Size, pElement->Type, _1, BufferObjectPtr(offset)));
 				break;
-			case DECLUSAGE_TEXCOORD:
-				m_ppTexCoords[pElement->UsageIndex] = new VertexParam(p);
+			case GL_TEXTURE_COORD_ARRAY:
+				TexCoordClientState[pElement->UsageIndex] = glEnableClientState;
+				PointerFunction = glTexCoordPointer;
+				m_TexCoordIndices.push_back(pElement->UsageIndex);
+				m_GLTexCoordPointers.push_back(bind(PointerFunction, pElement->Size, pElement->Type, _1, BufferObjectPtr(offset)));
 				break;
 			}
 		}
 	}
-}
-//-----------------------------------------------------------------------------
-DriverVertexDeclaration::~DriverVertexDeclaration()
-{
-	if (m_pVertex) delete m_pVertex;
-	if (m_pNormal) delete m_pNormal;
-	if (m_pColor) delete m_pColor;
-	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
-		if (m_ppTexCoords[i]) delete m_ppTexCoords[i];
 }
 //-----------------------------------------------------------------------------
 VertexShaderFragment::VertexShaderFragment(const std::string& Source) : m_uiGLVertexShader(glCreateShader(GL_VERTEX_SHADER))
