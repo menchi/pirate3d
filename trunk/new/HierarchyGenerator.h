@@ -21,6 +21,7 @@ template <class TList>
 struct GenVertexStruct : public GenScatterHierarchy<TList>
 {
 	typedef TList type_list;
+	GenVertexStruct() {};
 };
 
 template <class T, class TList>

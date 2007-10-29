@@ -3,6 +3,9 @@
 #ifdef _PIRATE_COMPILE_WITH_OPENGL_
 
 #include "OpenGLDriverResources.h"
+#include "boost/lambda/lambda.hpp"
+#include "boost/lambda/bind.hpp"
+#include <numeric>
 
 //-----------------------------------------------------------------------------
 DriverVertexBuffer::DriverVertexBuffer(unsigned int NumVertices, unsigned int VertexSize) : m_uiVertexSize(VertexSize)
@@ -28,50 +31,31 @@ void DriverIndexBuffer::Fill(void* pData, unsigned int Size)
 }
 //-----------------------------------------------------------------------------
 DriverVertexDeclaration::DriverVertexDeclaration(const StreamIndexArray& StreamIndices, const VertexFormatArray& VertexFormats)
-: VertexClientState(glDisableClientState), NormalClientState(glDisableClientState), ColorClientState(glDisableClientState)
 {
-	using namespace std;
-	using namespace std::tr1;
+	using namespace boost;
 
-	fill(TexCoordClientState, TexCoordClientState + MAX_TEXTURE_UNIT, glDisableClientState);
+	const unsigned int n = accumulate(VertexFormats.begin(), VertexFormats.end(), 0u, lambda::_1 + lambda::bind(&VertexFormat::size, lambda::_2));
+	m_ClientStateFunctions.resize(n);
+	m_PointerFunctions.resize(n);
 
-	function<void (GLint, GLenum, GLsizei, const GLvoid*)> PointerFunction;
-	function<void (GLenum, GLsizei, const GLvoid*)> NormalPointerFunction(glNormalPointer);
 
+	ClientStateFunctionArray::iterator c_itr = m_ClientStateFunctions.begin();
+	PointerFunctionArray::iterator p_itr = m_PointerFunctions.begin();
 	for (unsigned int i=0; i<StreamIndices.size(); ++i)
 	{
 		const VertexFormat& format = *VertexFormats[i];
-		unsigned int offset = 0;
+/*		unsigned int offset = 0;
 		
 		for (unsigned int j=0; j<format.size(); ++j)
 		{
 			const VertexElement* pElement = &format[j];
-			offset = (j == 0)? 0: offset + format[j-1].TypeSize;
 
-			switch (pElement->Usage)
-			{
-			case GL_VERTEX_ARRAY:
-				VertexClientState = glEnableClientState;
-				PointerFunction = glVertexPointer;
-				m_GLPointerFunctions.push_back(bind(PointerFunction, pElement->Size, pElement->Type, _1, BufferObjectPtr(offset)));
-				break;
-			case GL_NORMAL_ARRAY:
-				NormalClientState = glEnableClientState;
-				m_GLPointerFunctions.push_back(bind(NormalPointerFunction, pElement->Type, _1, BufferObjectPtr(offset)));
-				break;
-			case GL_COLOR_ARRAY:
-				ColorClientState = glEnableClientState;
-				PointerFunction = glColorPointer;
-				m_GLPointerFunctions.push_back(bind(PointerFunction, pElement->Size, pElement->Type, _1, BufferObjectPtr(offset)));
-				break;
-			case GL_TEXTURE_COORD_ARRAY:
-				TexCoordClientState[pElement->UsageIndex] = glEnableClientState;
-				PointerFunction = glTexCoordPointer;
-				m_TexCoordIndices.push_back(pElement->UsageIndex);
-				m_GLTexCoordPointers.push_back(bind(PointerFunction, pElement->Size, pElement->Type, _1, BufferObjectPtr(offset)));
-				break;
-			}
+			m_ClientStateFunctions.push_back(pElement->ClientState);
+			m_PointerFunctions.push_back(pElement->Pointer);
 		}
+		*/		
+		c_itr = transform(format.begin(), format.end(), c_itr, std::mem_fun_ref(&VertexElement::GetClientStateFunction));
+		p_itr = transform(format.begin(), format.end(), p_itr, std::mem_fun_ref(&VertexElement::GetPointerFunction));
 	}
 }
 //-----------------------------------------------------------------------------

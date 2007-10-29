@@ -307,15 +307,12 @@ ShaderProgramPtr OpenGLDriver::CreateShaderProgram(const VertexShaderPtr pVertex
 //-----------------------------------------------------------------------------
 void OpenGLDriver::SetVertexDeclaration(DriverVertexDeclarationPtr pVertexDeclaration)
 {
-	pVertexDeclaration->VertexClientState(GL_VERTEX_ARRAY);
-	pVertexDeclaration->NormalClientState(GL_NORMAL_ARRAY);
-	pVertexDeclaration->ColorClientState(GL_COLOR_ARRAY);
+	if (pVertexDeclaration == m_pCurVertexDeclaration)
+		return;
 
-	for (unsigned int i=0; i<MAX_TEXTURE_UNIT; ++i)
-	{
-		glClientActiveTexture(GL_TEXTURE0 + i);
-		pVertexDeclaration->TexCoordClientState[i](GL_TEXTURE_COORD_ARRAY);
-	}
+	using namespace std;
+	vector<tr1::function<void ()> >& functions = pVertexDeclaration->m_ClientStateFunctions;
+	for_each(functions.begin(), functions.end(), mem_fun_ref(&tr1::function<void ()>::operator()));
 
 	m_pCurVertexDeclaration = pVertexDeclaration;
 }
@@ -326,14 +323,8 @@ void OpenGLDriver::SetVertexStream(unsigned int StreamNumber, DriverVertexBuffer
 
 	glBindBuffer(GL_ARRAY_BUFFER, pVertexBuffer->m_uiVertexBufferID);
 
-	DriverVertexDeclaration::UnaryFunctionArray& functions = m_pCurVertexDeclaration->m_GLPointerFunctions;
-	for_each(functions.begin(), functions.end(), bind2nd(mem_fun_ref(&DriverVertexDeclaration::UnaryFunction::operator()), Stride));
-	functions = m_pCurVertexDeclaration->m_GLTexCoordPointers;
-	for (unsigned int i=0; i<functions.size(); ++i)
-	{
-		glClientActiveTexture(GL_TEXTURE0 + m_pCurVertexDeclaration->m_TexCoordIndices[i]);
-		functions[i](Stride);
-	}
+	DriverVertexDeclaration::PointerFunctionArray functions = m_pCurVertexDeclaration->m_PointerFunctions;
+	for_each(functions.begin(), functions.end(), bind2nd(mem_fun_ref(&DriverVertexDeclaration::PointerFunction::operator()), Stride));
 }
 //-----------------------------------------------------------------------------
 void OpenGLDriver::DrawIndexedTriangleList(DriverIndexBufferPtr pIndexBuffer, unsigned int NumVertices, unsigned int TriangleCount)

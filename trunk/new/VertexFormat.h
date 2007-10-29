@@ -1,28 +1,32 @@
 #ifndef _PIRATE_VERTEX_FORMAT_H_
 #define _PIRATE_VERTEX_FORMAT_H_
 
-#include "boost/mpl/list.hpp"
-#include "boost/mpl/front.hpp"
-#include "boost/mpl/pop_front.hpp"
-#include "boost/mpl/size.hpp"
 #include <vector>
 
 template<class VertexElementType>
 struct VertexFormat_ {
 	typedef typename std::vector<VertexElementType> VertexElementArray;
 
-	VertexFormat_() {}
-
-	template<class TList>
-	void Init()
+	template<class TList, class ConverterType>
+	VertexFormat_(TList TypeList, ConverterType& Converter) 
 	{
 		m_VertexElements.resize(boost::mpl::size<TList>::value);
-		GetVertexFormatFromTypeList(TList(), &m_VertexElements[0]);
+		Converter.Convert<TList>(&m_VertexElements[0]);
 	}
 
-	typename VertexElementArray::size_type size() const 
+	unsigned int size() const 
 	{ 
-		return m_VertexElements.size(); 
+		return (unsigned int)m_VertexElements.size(); 
+	}
+
+	typename VertexElementArray::const_iterator begin() const
+	{ 
+		return m_VertexElements.begin();
+	}
+
+	typename VertexElementArray::const_iterator end() const
+	{ 
+		return m_VertexElements.end();
 	}
 
 	const VertexElementType& operator[] (unsigned int i) const
@@ -32,15 +36,5 @@ struct VertexFormat_ {
 
 	VertexElementArray m_VertexElements;
 };
-
-template<class TList, class VertexElementType> 
-void GetVertexFormatFromTypeList(TList TypeList, VertexElementType* pVertexElement)
-{
-	*pVertexElement = VertexElementType(typename front<TList>::type());
-	GetVertexFormatFromTypeList(typename boost::mpl::pop_front<TList>::type(), ++pVertexElement);
-}
-
-template<class VertexElementType> 
-void GetVertexFormatFromTypeList(boost::mpl::l_end TypeList, VertexElementType* pVertexElement) {}
 
 #endif
