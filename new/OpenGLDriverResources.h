@@ -50,19 +50,15 @@ class DriverVertexDeclaration {
 private:
 	typedef std::vector<unsigned short> StreamIndexArray;
 	typedef std::vector<const VertexFormat*> VertexFormatArray;
-	typedef std::tr1::function<void (GLsizei)> UnaryFunction;
-	typedef std::vector<UnaryFunction> UnaryFunctionArray;
+	typedef std::tr1::function<void ()> ClientStateFunction;
+	typedef std::vector<ClientStateFunction> ClientStateFunctionArray;
+	typedef std::tr1::function<void (GLsizei)> PointerFunction;
+	typedef std::vector<PointerFunction> PointerFunctionArray;
 
 	DriverVertexDeclaration(const StreamIndexArray& StreamIndices, const VertexFormatArray& VertexFormats);
 
-	void (GLAPIENTRY *VertexClientState)(GLenum);
-	void (GLAPIENTRY *NormalClientState)(GLenum);
-	void (GLAPIENTRY *ColorClientState)(GLenum);
-	void (GLAPIENTRY *TexCoordClientState[MAX_TEXTURE_UNIT])(GLenum);
-
-	UnaryFunctionArray m_GLPointerFunctions;
-	std::vector<int> m_TexCoordIndices;
-	UnaryFunctionArray m_GLTexCoordPointers;
+	ClientStateFunctionArray m_ClientStateFunctions;
+	PointerFunctionArray m_PointerFunctions;
 
 	friend class OpenGLDriver;
 };

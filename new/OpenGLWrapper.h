@@ -7,6 +7,11 @@
 
 static const unsigned int MAX_TEXTURE_UNIT = 8;
 
+void EnableClientStateTexCoord(int i);
+void DisableClientStateTexCoord(int i);
+
+void TexCoordPointer_i (int index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
+
 void PrintShaderInfoLog(GLuint obj);
 void PrintProgramInfoLog(GLuint obj);
 

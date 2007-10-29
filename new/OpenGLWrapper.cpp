@@ -5,6 +5,24 @@
 #ifdef _PIRATE_COMPILE_WITH_OPENGL_
 
 //-----------------------------------------------------------------------------
+void EnableClientStateTexCoord(int i)
+{
+	glClientActiveTexture(GL_TEXTURE0 + i);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+}
+//-----------------------------------------------------------------------------
+void DisableClientStateTexCoord(int i)
+{
+	glClientActiveTexture(GL_TEXTURE0 + i);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+}
+//-----------------------------------------------------------------------------
+void TexCoordPointer_i(int index, GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
+{
+	glClientActiveTexture(GL_TEXTURE0 + index);
+	glTexCoordPointer(size, type, stride, pointer);
+}
+//-----------------------------------------------------------------------------
 void PrintShaderInfoLog(GLuint obj)
 {
 	int infologLength = 0;
